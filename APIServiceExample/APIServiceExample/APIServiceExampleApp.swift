@@ -9,12 +9,11 @@ import SwiftUI
 
 @main
 struct APIServiceExampleApp: App {
+    @UIApplicationDelegateAdaptor var delegate: AppDelegate
+    
     var body: some Scene {
         WindowGroup {
-            NavigationStack {
-                MainView()
-                    .navigationTitle("Repo List")
-            }
+            MainView()
         }
     }
 }

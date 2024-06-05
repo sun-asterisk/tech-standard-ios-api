@@ -1,7 +1,7 @@
 import Foundation
 
 public struct EndpointDecorator: Endpoint {
-    public var base: String {
+    public var base: String? {
         if case let .base(value) = overriding {
             return value
         }
@@ -9,7 +9,7 @@ public struct EndpointDecorator: Endpoint {
         return endpoint.base
     }
     
-    public var path: String {
+    public var path: String? {
         if case let .path(value) = overriding {
             return value
         }

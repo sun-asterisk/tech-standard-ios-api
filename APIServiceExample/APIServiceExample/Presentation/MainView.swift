@@ -10,10 +10,19 @@ import SwiftUI
 struct MainView: View {
     var body: some View {
         TabView {
-            RepoListView()
-                .tabItem {
-                    Label("Home", systemImage: "house.fill")
-                }
+            NavigationStack {
+                RepoListView()
+            }
+            .tabItem {
+                Label("Home", systemImage: "house.fill")
+            }
+            
+            NavigationStack {
+                DownloadImageView()
+            }
+            .tabItem {
+                Label("Download", systemImage: "star.fill")
+            }
         }
     }
 }

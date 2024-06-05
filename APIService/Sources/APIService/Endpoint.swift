@@ -5,15 +5,16 @@ public protocol URLRequestConvertible {
 }
 
 public protocol Endpoint: URLRequestConvertible {
-    var base: String { get }
-    var path: String { get }
+    var base: String? { get }
+    var path: String? { get }
     var urlString: String? { get }
     var headers: [String: Any]? { get }
     var queryItems: [String: Any]? { get }
-    var urlRequest: URLRequest? { get }
 }
 
 public extension Endpoint {
+    var base: String? { nil }
+    var path: String? { nil }
     var urlString: String? { nil }
     var headers: [String: Any]? { nil }
     var queryItems: [String: Any]? { nil }
@@ -25,7 +26,7 @@ public extension Endpoint {
         
         if let urlString {
             components = URLComponents(string: urlString)
-        } else {
+        } else if let base, let path {
             components = URLComponents(string: base)
             components?.path = path
         }
@@ -33,9 +34,7 @@ public extension Endpoint {
         guard var components else { return nil }
         
         if let queryItems {
-            components.queryItems = queryItems.compactMap { name, value in
-                return URLQueryItem(name: name, value: "\(value)")
-            }
+            components.queryItems = queryItems.compactMap { URLQueryItem(name: $0, value: "\($1)") }
         }
         
         return components
@@ -45,11 +44,9 @@ public extension Endpoint {
         guard let url = urlComponents?.url else { return nil }
         var request = URLRequest(url: url)
         
-        headers?.forEach { (key, value) in
-            if let value = value as? String {
-                request.setValue(value, forHTTPHeaderField: key)
-            }
-        }
+        headers?
+            .compactMapValues { $0 as? String }
+            .forEach { request.setValue($1, forHTTPHeaderField: $0) }
         
         return request
     }

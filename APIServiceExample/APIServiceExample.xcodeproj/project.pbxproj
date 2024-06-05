@@ -23,10 +23,12 @@
 		1705E0252A11E9B8008753E0 /* EventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1705E0242A11E9B8008753E0 /* EventView.swift */; };
 		1705E0272A11E9E7008753E0 /* Publisher+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1705E0262A11E9E7008753E0 /* Publisher+.swift */; };
 		1705E0292A12096A008753E0 /* RepoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1705E0282A12096A008753E0 /* RepoListView.swift */; };
+		1739E1B72C10036D00C104B6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1739E1B62C10036D00C104B6 /* AppDelegate.swift */; };
 		177E226A2A0C8106008D2319 /* APIServiceExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 177E22692A0C8106008D2319 /* APIServiceExampleApp.swift */; };
-		177E226C2A0C8106008D2319 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 177E226B2A0C8106008D2319 /* ContentView.swift */; };
 		177E226E2A0C8107008D2319 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 177E226D2A0C8107008D2319 /* Assets.xcassets */; };
 		177E22712A0C8107008D2319 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 177E22702A0C8107008D2319 /* Preview Assets.xcassets */; };
+		17A286222C0EEB85000FA2EB /* DownloadImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A286212C0EEB85000FA2EB /* DownloadImageView.swift */; };
+		17A286242C0EEC30000FA2EB /* DownloadFileEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A286232C0EEC30000FA2EB /* DownloadFileEndpoint.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,11 +46,13 @@
 		1705E0242A11E9B8008753E0 /* EventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventView.swift; sourceTree = "<group>"; };
 		1705E0262A11E9E7008753E0 /* Publisher+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Publisher+.swift"; sourceTree = "<group>"; };
 		1705E0282A12096A008753E0 /* RepoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoListView.swift; sourceTree = "<group>"; };
+		1739E1B62C10036D00C104B6 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		177E22662A0C8106008D2319 /* APIServiceExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = APIServiceExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		177E22692A0C8106008D2319 /* APIServiceExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIServiceExampleApp.swift; sourceTree = "<group>"; };
-		177E226B2A0C8106008D2319 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		177E226D2A0C8107008D2319 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		177E22702A0C8107008D2319 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		17A286212C0EEB85000FA2EB /* DownloadImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadImageView.swift; sourceTree = "<group>"; };
+		17A286232C0EEC30000FA2EB /* DownloadFileEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadFileEndpoint.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,6 +107,7 @@
 			children = (
 				1705E0162A11E883008753E0 /* Repo */,
 				1705E0142A11E82F008753E0 /* MainView.swift */,
+				17A286212C0EEB85000FA2EB /* DownloadImageView.swift */,
 			);
 			path = Presentation;
 			sourceTree = "<group>";
@@ -119,6 +124,7 @@
 			isa = PBXGroup;
 			children = (
 				1705E0062A11E657008753E0 /* GitEndpoint.swift */,
+				17A286232C0EEC30000FA2EB /* DownloadFileEndpoint.swift */,
 			);
 			path = API;
 			sourceTree = "<group>";
@@ -195,9 +201,9 @@
 				1705DFFE2A11E520008753E0 /* Domain */,
 				1705DFFD2A11E51B008753E0 /* Data */,
 				177E22692A0C8106008D2319 /* APIServiceExampleApp.swift */,
-				177E226B2A0C8106008D2319 /* ContentView.swift */,
 				177E226D2A0C8107008D2319 /* Assets.xcassets */,
 				177E226F2A0C8107008D2319 /* Preview Content */,
+				1739E1B62C10036D00C104B6 /* AppDelegate.swift */,
 			);
 			path = APIServiceExample;
 			sourceTree = "<group>";
@@ -298,11 +304,13 @@
 				1705E0182A11E89E008753E0 /* RepoView.swift in Sources */,
 				1705E0072A11E657008753E0 /* GitEndpoint.swift in Sources */,
 				1705E0092A11E6B7008753E0 /* Repo.swift in Sources */,
-				177E226C2A0C8106008D2319 /* ContentView.swift in Sources */,
 				1705E00B2A11E6BB008753E0 /* Event.swift in Sources */,
 				1705E0202A11E94B008753E0 /* CancelBag.swift in Sources */,
 				1705E01E2A11E923008753E0 /* View+.swift in Sources */,
 				177E226A2A0C8106008D2319 /* APIServiceExampleApp.swift in Sources */,
+				17A286222C0EEB85000FA2EB /* DownloadImageView.swift in Sources */,
+				17A286242C0EEC30000FA2EB /* DownloadFileEndpoint.swift in Sources */,
+				1739E1B72C10036D00C104B6 /* AppDelegate.swift in Sources */,
 				1705E0222A11E96B008753E0 /* RepoUseCases.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -429,9 +437,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"APIServiceExample/Preview Content\"";
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -446,6 +455,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.sun-asterisk.APIServiceExample";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -457,9 +467,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"APIServiceExample/Preview Content\"";
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -474,6 +485,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.sun-asterisk.APIServiceExample";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

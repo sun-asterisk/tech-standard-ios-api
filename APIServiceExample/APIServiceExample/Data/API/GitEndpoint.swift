@@ -14,11 +14,11 @@ enum GitEndpoint {
 }
 
 extension GitEndpoint: Endpoint {
-    var base: String {
+    var base: String? {
         "https://api.github.com"
     }
     
-    var path: String {
+    var path: String? {
         switch self {
         case .repos:
             return "/search/repositories"
