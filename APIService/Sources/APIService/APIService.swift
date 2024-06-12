@@ -45,4 +45,19 @@ public extension APIService {
             .receive(on: queue)
             .eraseToAnyPublisher()
     }
+    
+    func download(
+        _ endpoint: Endpoint,
+        queue: DispatchQueue = .main
+    ) -> AnyPublisher<URL, URLError> {
+        guard let urlRequest = endpoint.urlRequest else {
+            return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
+        }
+        
+        return session.downloadTaskPublisher(for: urlRequest)
+            .map { $0.url }
+            .mapError { $0 as URLError }
+            .receive(on: queue)
+            .eraseToAnyPublisher()
+    }
 }

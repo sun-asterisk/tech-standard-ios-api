@@ -50,7 +50,7 @@ class ViewModel: ObservableObject {
 
     func startDownload(urls: [URL]) {
         for url in urls {
-//            apiService.download(DownloadFileEndpoint.image(url: url.absoluteString))
+//            apiService.downloadWithProgress(DownloadFileEndpoint.image(url: url.absoluteString))
 //                .sink(receiveCompletion: { completion in
 //                    switch completion {
 //                    case .finished:
@@ -67,7 +67,7 @@ class ViewModel: ObservableObject {
 //                })
 //                .store(in: &cancellables)
             
-            apiService.requestData(DownloadFileEndpoint.image(url: url.absoluteString))
+            apiService.download(DownloadFileEndpoint.image(url: url.absoluteString))
                 .sink(receiveCompletion: { completion in
                     switch completion {
                     case .finished:
@@ -75,10 +75,23 @@ class ViewModel: ObservableObject {
                     case .failure(let error):
                         print("Download failed for \(url): \(error)")
                     }
-                }, receiveValue: { [weak self] data, progress in
-                    self?.progressDict[url] = (progress, data)
+                }, receiveValue: { fileURL in
+                    print("File downloaded", fileURL)
                 })
                 .store(in: &cancellables)
+            
+//            apiService.requestDataWithProgress(DownloadFileEndpoint.image(url: url.absoluteString))
+//                .sink(receiveCompletion: { completion in
+//                    switch completion {
+//                    case .finished:
+//                        print("Download finished for \(url)")
+//                    case .failure(let error):
+//                        print("Download failed for \(url): \(error)")
+//                    }
+//                }, receiveValue: { [weak self] data, progress in
+//                    self?.progressDict[url] = (progress, data)
+//                })
+//                .store(in: &cancellables)
             
         }
     }

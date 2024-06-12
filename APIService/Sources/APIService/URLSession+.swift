@@ -3,12 +3,12 @@ import Combine
 
 public extension URLSession {
     
-    func downloadTaskPublisher(for url: URL, delegate: URLSessionDataDelegate) -> URLSession.DownloadTaskPublisher {
-        self.downloadTaskPublisher(for: .init(url: url), delegate: delegate)
+    func downloadTaskPublisher(for url: URL) -> URLSession.DownloadTaskPublisher {
+        self.downloadTaskPublisher(for: .init(url: url))
     }
     
-    func downloadTaskPublisher(for request: URLRequest, delegate: URLSessionDataDelegate) -> URLSession.DownloadTaskPublisher {
-        .init(request: request, session: self, delegate: delegate)
+    func downloadTaskPublisher(for request: URLRequest) -> URLSession.DownloadTaskPublisher {
+        .init(request: request, session: self)
     }
     
     struct DownloadTaskPublisher: Publisher {
@@ -19,7 +19,7 @@ public extension URLSession {
         public let request: URLRequest
         public let session: URLSession
         
-        public init(request: URLRequest, session: URLSession, delegate: URLSessionDataDelegate) {
+        public init(request: URLRequest, session: URLSession) {
             self.request = request
             self.session = session
         }

@@ -7,15 +7,11 @@ public protocol DownloadWithProgress {
 }
 
 public extension APIService where Self: DownloadWithProgress {
-    func downloadTaskPublisher(for url: URL, delegate: DownloadTaskHandler) -> DownloadTaskPublisher {
-        self.downloadTaskPublisher(for: .init(url: url), delegate: delegate)
-    }
-    
-    func downloadTaskPublisher(for request: URLRequest, delegate: DownloadTaskHandler) -> DownloadTaskPublisher {
+    private func downloadTaskPublisher(for request: URLRequest, delegate: DownloadTaskHandler) -> DownloadTaskPublisher {
         .init(request: request, session: self.downloadSession, delegate: delegate)
     }
     
-    func download(
+    func downloadWithProgress(
         _ endpoint: Endpoint,
         queue: DispatchQueue = .main
     ) -> AnyPublisher<(url: URL?, progress: Double?), Error> {
@@ -137,7 +133,6 @@ public class DownloadTaskSubscription<SubscriberType: Subscriber>: NSObject, Sub
         
         delegate.didWriteData = { [weak self] url, bytesWritten, totalBytesWritten, totalBytesExpectedToWrite in
             guard url == requestURL else { return }
-            print("Receive", bytesWritten, totalBytesWritten, totalBytesExpectedToWrite)
             let progress = Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)
             _ = self?.subscriber?.receive((nil, progress))
         }

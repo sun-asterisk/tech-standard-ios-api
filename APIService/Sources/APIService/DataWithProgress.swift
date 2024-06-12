@@ -7,15 +7,11 @@ public protocol DataWithProgress {
 }
 
 public extension APIService where Self: DataWithProgress {
-    func dataTaskPublisher(for url: URL, delegate: DataTaskHandler) -> DataTaskPublisher {
-        self.dataTaskPublisher(for: .init(url: url), delegate: delegate)
-    }
-    
-    func dataTaskPublisher(for request: URLRequest, delegate: DataTaskHandler) -> DataTaskPublisher {
+    private func dataTaskPublisher(for request: URLRequest, delegate: DataTaskHandler) -> DataTaskPublisher {
         .init(request: request, session: self.dataSession, delegate: delegate)
     }
     
-    func requestData(
+    func requestDataWithProgress(
         _ endpoint: Endpoint,
         queue: DispatchQueue = .main
     ) -> AnyPublisher<(data: Data?, progress: Double?), Error> {
@@ -147,7 +143,6 @@ public class DataTaskSubscription<SubscriberType: Subscriber>: NSObject, Subscri
         
         delegate.didReceive = { [weak self] url, totalBytesReceived, totalBytesExpectedToReceive, data in
             guard url == requestURL else { return }
-            print("Receive", totalBytesReceived, totalBytesExpectedToReceive)
             let progress = Double(totalBytesReceived) / Double(totalBytesExpectedToReceive)
             _ = self?.subscriber?.receive((data, progress))
         }
