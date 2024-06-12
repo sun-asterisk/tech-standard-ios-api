@@ -133,9 +133,6 @@ public class DownloadTaskSubscription<SubscriberType: Subscriber>: NSObject, Sub
             if let error = error as? URLError {
                 self?.subscriber?.receive(completion: .failure(error))
             }
-//            else {
-//                self?.subscriber?.receive(completion: .finished)
-//            }
         }
         
         delegate.didWriteData = { [weak self] url, bytesWritten, totalBytesWritten, totalBytesExpectedToWrite in

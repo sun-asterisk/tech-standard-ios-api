@@ -31,7 +31,7 @@ public extension APIService {
             .eraseToAnyPublisher()
     }
     
-    func download(
+    func requestData(
         _ endpoint: Endpoint,
         queue: DispatchQueue = .main
     ) -> AnyPublisher<Data, URLError> {

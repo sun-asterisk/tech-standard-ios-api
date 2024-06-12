@@ -21,9 +21,9 @@ struct DownloadImageView: View {
                     ProgressView(value: viewModel.progressDict[url]?.0 ?? 0.0)
                         .progressViewStyle(LinearProgressViewStyle())
                         .padding()
-//                    if let data = viewModel.progressDict[url]?.1 {
-//                        Text("Data received: \(data.count) bytes")
-//                    }
+                    if let data = viewModel.progressDict[url]?.1 {
+                        Text("Data received: \(data.count) bytes")
+                    }
                 }
             }
             Button("Start Downloads") {
@@ -44,13 +44,30 @@ struct DownloadImageView: View {
 
 class ViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
-    @Published var progressDict: [URL: (Double?, URL?)] = [:]
+    @Published var progressDict: [URL: (Double?, Data?)] = [:]
     
     private let apiService = DefaultAPIService.shared
 
     func startDownload(urls: [URL]) {
         for url in urls {
-            apiService.download(DownloadFileEndpoint.image(url: url.absoluteString))
+//            apiService.download(DownloadFileEndpoint.image(url: url.absoluteString))
+//                .sink(receiveCompletion: { completion in
+//                    switch completion {
+//                    case .finished:
+//                        print("Download finished for \(url)")
+//                    case .failure(let error):
+//                        print("Download failed for \(url): \(error)")
+//                    }
+//                }, receiveValue: { [weak self] fileURL, progress in
+//                    self?.progressDict[url] = (progress, fileURL)
+//                    
+//                    if let fileURL {
+//                        print("File downloaded", fileURL)
+//                    }
+//                })
+//                .store(in: &cancellables)
+            
+            apiService.requestData(DownloadFileEndpoint.image(url: url.absoluteString))
                 .sink(receiveCompletion: { completion in
                     switch completion {
                     case .finished:
@@ -58,12 +75,8 @@ class ViewModel: ObservableObject {
                     case .failure(let error):
                         print("Download failed for \(url): \(error)")
                     }
-                }, receiveValue: { [weak self] fileURL, progress in
-                    self?.progressDict[url] = (progress, fileURL)
-                    
-                    if let fileURL {
-                        print("file", fileURL)
-                    }
+                }, receiveValue: { [weak self] data, progress in
+                    self?.progressDict[url] = (progress, data)
                 })
                 .store(in: &cancellables)
             
