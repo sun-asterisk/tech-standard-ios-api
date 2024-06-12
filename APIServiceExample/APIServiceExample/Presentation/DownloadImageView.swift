@@ -21,16 +21,21 @@ struct DownloadImageView: View {
                     ProgressView(value: viewModel.progressDict[url]?.0 ?? 0.0)
                         .progressViewStyle(LinearProgressViewStyle())
                         .padding()
-                    if let data = viewModel.progressDict[url]?.1 {
-                        Text("Data received: \(data.count) bytes")
-                    }
+//                    if let data = viewModel.progressDict[url]?.1 {
+//                        Text("Data received: \(data.count) bytes")
+//                    }
                 }
             }
             Button("Start Downloads") {
                 let urls = [
-                    URL(string: "https://file-examples.com/storage/fe4e1227086659fa1a24064/2017/10/file_example_JPG_2500kB.jpg")!
+//                    URL(string: "https://file-examples.com/storage/fe4e1227086659fa1a24064/2017/10/file_example_JPG_2500kB.jpg")!
+                    URL(string: "https://file-examples.com/storage/fe3cb26995666504a8d6180/2017/04/file_example_MP4_640_3MG.mp4")!
                 ]
                 viewModel.startDownload(urls: urls)
+            }
+            
+            Button("Cancel") {
+                viewModel.cancelDownload()
             }
         }
         .padding()
@@ -39,7 +44,7 @@ struct DownloadImageView: View {
 
 class ViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
-    @Published var progressDict: [URL: (Double, Data?)] = [:]
+    @Published var progressDict: [URL: (Double?, URL?)] = [:]
     
     private let apiService = DefaultAPIService.shared
 
@@ -53,10 +58,19 @@ class ViewModel: ObservableObject {
                     case .failure(let error):
                         print("Download failed for \(url): \(error)")
                     }
-                }, receiveValue: { [weak self] progress, data in
-                    self?.progressDict[url] = (progress, data)
+                }, receiveValue: { [weak self] fileURL, progress in
+                    self?.progressDict[url] = (progress, fileURL)
+                    
+                    if let fileURL {
+                        print("file", fileURL)
+                    }
                 })
                 .store(in: &cancellables)
+            
         }
+    }
+    
+    func cancelDownload() {
+        cancellables = Set<AnyCancellable>()
     }
 }
