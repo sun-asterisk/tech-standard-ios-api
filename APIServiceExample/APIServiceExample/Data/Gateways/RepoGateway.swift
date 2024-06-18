@@ -21,8 +21,24 @@ final class RepoGateway: RepoGatewayProtocol {
     }
     
     func getRepos(page: Int, perPage: Int) -> AnyPublisher<[Repo], Error> {
-        DefaultAPIService.shared
-            .request(GitEndpoint.repos(page: page, perPage: perPage), decodingType: GetReposResult.self)
+        GitEndpoint.repos(page: page, perPage: perPage)
+            .add(headers: { ep in
+                let token = "a token"
+                
+                if var currentHeaders = ep.headers {
+                    currentHeaders["token"] = token
+                    return currentHeaders
+                }
+                
+                return ["token": token]
+            })
+            .add(headersToMerge: ["version": 1.5])
+            .publisher
+            .map { ep in
+                DefaultAPIService.shared
+                    .request(ep, decodingType: GetReposResult.self)
+            }
+            .switchToLatest()
             .map(\.items)
             .eraseToAnyPublisher()
     }
