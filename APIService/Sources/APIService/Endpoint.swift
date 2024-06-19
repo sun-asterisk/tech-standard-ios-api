@@ -1,5 +1,4 @@
 import Foundation
-import Combine
 
 public protocol URLRequestConvertible {
     var urlRequest: URLRequest? { get }
@@ -50,9 +49,5 @@ public extension Endpoint {
             .forEach { request.setValue($1, forHTTPHeaderField: $0) }
         
         return request
-    }
-    
-    var publisher: AnyPublisher<Endpoint, Never> {
-        Just(self).eraseToAnyPublisher()
     }
 }
