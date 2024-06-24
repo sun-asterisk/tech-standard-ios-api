@@ -34,6 +34,7 @@ final class RepoGateway: RepoGatewayProtocol {
             })
             .add(headersToMerge: ["version": 1.5])
             .publisher
+            .addToken(manager: TokenManager.shared)
             .map { ep in
                 DefaultAPIService.shared
                     .request(ep, decodingType: GetReposResult.self)

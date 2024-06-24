@@ -24,6 +24,7 @@
 		1705E0272A11E9E7008753E0 /* Publisher+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1705E0262A11E9E7008753E0 /* Publisher+.swift */; };
 		1705E0292A12096A008753E0 /* RepoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1705E0282A12096A008753E0 /* RepoListView.swift */; };
 		1739E1B72C10036D00C104B6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1739E1B62C10036D00C104B6 /* AppDelegate.swift */; };
+		17718ABE2C2963CB00B0185F /* TokenManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17718ABD2C2963CB00B0185F /* TokenManager.swift */; };
 		177E226A2A0C8106008D2319 /* APIServiceExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 177E22692A0C8106008D2319 /* APIServiceExampleApp.swift */; };
 		177E226E2A0C8107008D2319 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 177E226D2A0C8107008D2319 /* Assets.xcassets */; };
 		177E22712A0C8107008D2319 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 177E22702A0C8107008D2319 /* Preview Assets.xcassets */; };
@@ -47,6 +48,7 @@
 		1705E0262A11E9E7008753E0 /* Publisher+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Publisher+.swift"; sourceTree = "<group>"; };
 		1705E0282A12096A008753E0 /* RepoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoListView.swift; sourceTree = "<group>"; };
 		1739E1B62C10036D00C104B6 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		17718ABD2C2963CB00B0185F /* TokenManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenManager.swift; sourceTree = "<group>"; };
 		177E22662A0C8106008D2319 /* APIServiceExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = APIServiceExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		177E22692A0C8106008D2319 /* APIServiceExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIServiceExampleApp.swift; sourceTree = "<group>"; };
 		177E226D2A0C8107008D2319 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -123,6 +125,7 @@
 		1705E0032A11E54E008753E0 /* API */ = {
 			isa = PBXGroup;
 			children = (
+				17718ABD2C2963CB00B0185F /* TokenManager.swift */,
 				1705E0062A11E657008753E0 /* GitEndpoint.swift */,
 				17A286232C0EEC30000FA2EB /* DownloadFileEndpoint.swift */,
 			);
@@ -296,6 +299,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1705E0272A11E9E7008753E0 /* Publisher+.swift in Sources */,
+				17718ABE2C2963CB00B0185F /* TokenManager.swift in Sources */,
 				1705E01A2A11E8E6008753E0 /* RepoDetailView.swift in Sources */,
 				1705E0012A11E542008753E0 /* RepoGateway.swift in Sources */,
 				1705E0252A11E9B8008753E0 /* EventView.swift in Sources */,

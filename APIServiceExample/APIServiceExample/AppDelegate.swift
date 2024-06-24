@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import APIService
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     
@@ -14,6 +15,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        TokenManager.shared.setToken("test token")
         
         return true
     }
