@@ -11,8 +11,6 @@
 		1705E0072A11E657008753E0 /* GitEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1705E0062A11E657008753E0 /* GitEndpoint.swift */; };
 		1705E0092A11E6B7008753E0 /* Repo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1705E0082A11E6B7008753E0 /* Repo.swift */; };
 		1705E00B2A11E6BB008753E0 /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1705E00A2A11E6BB008753E0 /* Event.swift */; };
-		1705E00E2A11E780008753E0 /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = 1705E00D2A11E780008753E0 /* Then */; };
-		1705E0112A11E78F008753E0 /* Factory in Frameworks */ = {isa = PBXBuildFile; productRef = 1705E0102A11E78F008753E0 /* Factory */; };
 		1705E0132A11E7CC008753E0 /* APIService in Frameworks */ = {isa = PBXBuildFile; productRef = 1705E0122A11E7CC008753E0 /* APIService */; };
 		1705E0152A11E82F008753E0 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1705E0142A11E82F008753E0 /* MainView.swift */; };
 		1705E0182A11E89E008753E0 /* RepoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1705E0172A11E89E008753E0 /* RepoView.swift */; };
@@ -30,6 +28,8 @@
 		177E22712A0C8107008D2319 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 177E22702A0C8107008D2319 /* Preview Assets.xcassets */; };
 		17A286222C0EEB85000FA2EB /* DownloadImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A286212C0EEB85000FA2EB /* DownloadImageView.swift */; };
 		17A286242C0EEC30000FA2EB /* DownloadFileEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A286232C0EEC30000FA2EB /* DownloadFileEndpoint.swift */; };
+		17CB2EA52C2BB4C900D6DD37 /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = 17CB2EA42C2BB4C900D6DD37 /* Then */; };
+		17CB2EA82C2BB4F000D6DD37 /* Factory in Frameworks */ = {isa = PBXBuildFile; productRef = 17CB2EA72C2BB4F000D6DD37 /* Factory */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -62,9 +62,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1705E00E2A11E780008753E0 /* Then in Frameworks */,
-				1705E0112A11E78F008753E0 /* Factory in Frameworks */,
+				17CB2EA82C2BB4F000D6DD37 /* Factory in Frameworks */,
 				1705E0132A11E7CC008753E0 /* APIService in Frameworks */,
+				17CB2EA52C2BB4C900D6DD37 /* Then in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -236,9 +236,9 @@
 			);
 			name = APIServiceExample;
 			packageProductDependencies = (
-				1705E00D2A11E780008753E0 /* Then */,
-				1705E0102A11E78F008753E0 /* Factory */,
 				1705E0122A11E7CC008753E0 /* APIService */,
+				17CB2EA42C2BB4C900D6DD37 /* Then */,
+				17CB2EA72C2BB4F000D6DD37 /* Factory */,
 			);
 			productName = APIServiceExample;
 			productReference = 177E22662A0C8106008D2319 /* APIServiceExample.app */;
@@ -269,8 +269,8 @@
 			);
 			mainGroup = 177E225D2A0C8106008D2319;
 			packageReferences = (
-				1705E00C2A11E780008753E0 /* XCRemoteSwiftPackageReference "Then" */,
-				1705E00F2A11E78F008753E0 /* XCRemoteSwiftPackageReference "Factory" */,
+				17CB2EA32C2BB4C900D6DD37 /* XCRemoteSwiftPackageReference "Then" */,
+				17CB2EA62C2BB4F000D6DD37 /* XCRemoteSwiftPackageReference "Factory" */,
 			);
 			productRefGroup = 177E22672A0C8106008D2319 /* Products */;
 			projectDirPath = "";
@@ -520,38 +520,38 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		1705E00C2A11E780008753E0 /* XCRemoteSwiftPackageReference "Then" */ = {
+		17CB2EA32C2BB4C900D6DD37 /* XCRemoteSwiftPackageReference "Then" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/devxoul/Then";
 			requirement = {
-				branch = master;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
 			};
 		};
-		1705E00F2A11E78F008753E0 /* XCRemoteSwiftPackageReference "Factory" */ = {
+		17CB2EA62C2BB4F000D6DD37 /* XCRemoteSwiftPackageReference "Factory" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/hmlongco/Factory";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.3.2;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		1705E00D2A11E780008753E0 /* Then */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1705E00C2A11E780008753E0 /* XCRemoteSwiftPackageReference "Then" */;
-			productName = Then;
-		};
-		1705E0102A11E78F008753E0 /* Factory */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1705E00F2A11E78F008753E0 /* XCRemoteSwiftPackageReference "Factory" */;
-			productName = Factory;
-		};
 		1705E0122A11E7CC008753E0 /* APIService */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = APIService;
+		};
+		17CB2EA42C2BB4C900D6DD37 /* Then */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 17CB2EA32C2BB4C900D6DD37 /* XCRemoteSwiftPackageReference "Then" */;
+			productName = Then;
+		};
+		17CB2EA72C2BB4F000D6DD37 /* Factory */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 17CB2EA62C2BB4F000D6DD37 /* XCRemoteSwiftPackageReference "Factory" */;
+			productName = Factory;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
