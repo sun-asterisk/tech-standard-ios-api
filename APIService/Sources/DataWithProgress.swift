@@ -1,16 +1,29 @@
 import Foundation
 import Combine
 
+/// Protocol that provides properties for URLSession and DataTaskHandler.
 public protocol DataWithProgress {
     var dataSession: URLSession { get }
     var dataTaskHandler: DataTaskHandler { get }
 }
 
 public extension APIService where Self: DataWithProgress {
+    /// Creates a DataTaskPublisher for the given URLRequest and delegate.
+    ///
+    /// - Parameters:
+    ///   - request: The URLRequest to create the publisher for.
+    ///   - delegate: The delegate to handle data task events.
+    /// - Returns: A DataTaskPublisher instance.
     private func dataTaskPublisher(for request: URLRequest, delegate: DataTaskHandler) -> DataTaskPublisher {
         .init(request: request, session: self.dataSession, delegate: delegate)
     }
     
+    /// Performs a network request and returns the data along with progress updates.
+    ///
+    /// - Parameters:
+    ///   - endpoint: The endpoint to request.
+    ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
+    /// - Returns: A publisher that emits a tuple containing optional data and progress or an error.
     func requestDataWithProgress(
         _ endpoint: Endpoint,
         queue: DispatchQueue = .main
@@ -26,6 +39,7 @@ public extension APIService where Self: DataWithProgress {
     }
 }
 
+/// Class that handles URLSession data task events.
 public class DataTaskHandler: NSObject, URLSessionDataDelegate {
     var didFinishReceiving: ((_ requestURL: URL, _ data: Data) -> Void)?
     var didReceive: ((_ requestURL: URL, _ totalBytesReceived: Int64, _ totalBytesExpectedToReceive: Int64, _ data: Data) -> Void)?
@@ -33,10 +47,20 @@ public class DataTaskHandler: NSObject, URLSessionDataDelegate {
     
     private var receivedDataDict = [URL: Data]()
     
+    /// Gets the received data for the given URL.
+    ///
+    /// - Parameter url: The URL to get the received data for.
+    /// - Returns: The received data.
     private func getReceivedData(for url: URL) -> Data {
         receivedDataDict[url] ?? Data()
     }
     
+    /// Called when the data task receives data.
+    ///
+    /// - Parameters:
+    ///   - session: The URLSession.
+    ///   - dataTask: The URLSessionDataTask.
+    ///   - data: The received data.
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         guard let url = dataTask.originalRequest?.url else { return }
         // Append received data
@@ -49,6 +73,12 @@ public class DataTaskHandler: NSObject, URLSessionDataDelegate {
         didReceive?(url, totalBytesReceived, totalBytesExpectedToReceive, receivedData)
     }
     
+    /// Called when the data task completes.
+    ///
+    /// - Parameters:
+    ///   - session: The URLSession.
+    ///   - task: The URLSessionTask.
+    ///   - error: The error that occurred, if any.
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard let url = task.originalRequest?.url else { return }
         
@@ -62,15 +92,30 @@ public class DataTaskHandler: NSObject, URLSessionDataDelegate {
         receivedDataDict[url] = nil
     }
     
+    /// Called when the data task receives a response and decides whether to cache it.
+    ///
+    /// - Parameters:
+    ///   - session: The URLSession.
+    ///   - dataTask: The URLSessionDataTask.
+    ///   - proposedResponse: The proposed cached response.
+    ///   - completionHandler: The completion handler to call with the cached response.
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, willCacheResponse proposedResponse: CachedURLResponse, completionHandler: @escaping (CachedURLResponse?) -> Void) {
         completionHandler(proposedResponse)
     }
 
+    /// Called when the data task receives a response.
+    ///
+    /// - Parameters:
+    ///   - session: The URLSession.
+    ///   - dataTask: The URLSessionDataTask.
+    ///   - response: The received response.
+    ///   - completionHandler: The completion handler to call with the response disposition.
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
         completionHandler(.allow)
     }
 }
 
+/// A publisher that handles URLSession data tasks and emits data and progress updates.
 public struct DataTaskPublisher: Publisher {
     
     public typealias Output = (data: Data?, progress: Double?)
@@ -80,12 +125,21 @@ public struct DataTaskPublisher: Publisher {
     private let session: URLSession
     private unowned let delegate: DataTaskHandler
     
+    /// Initializes a new DataTaskPublisher.
+    ///
+    /// - Parameters:
+    ///   - request: The URLRequest to perform.
+    ///   - session: The URLSession to use.
+    ///   - delegate: The DataTaskHandler to handle data task events.
     public init(request: URLRequest, session: URLSession, delegate: DataTaskHandler) {
         self.request = request
         self.session = session
         self.delegate = delegate
     }
     
+    /// Attaches the specified subscriber to this publisher.
+    ///
+    /// - Parameter subscriber: The subscriber to attach to this publisher.
     public func receive<S>(subscriber: S) where S: Subscriber,
                                                 DataTaskPublisher.Failure == S.Failure,
                                                 DataTaskPublisher.Output == S.Input
@@ -101,6 +155,7 @@ public struct DataTaskPublisher: Publisher {
     }
 }
 
+/// A subscription that handles URLSession data tasks and provides updates to the subscriber.
 public class DataTaskSubscription<SubscriberType: Subscriber>: NSObject, Subscription where
     SubscriberType.Input == (data: Data?, progress: Double?),
     SubscriberType.Failure == URLError
@@ -111,6 +166,13 @@ public class DataTaskSubscription<SubscriberType: Subscriber>: NSObject, Subscri
     private var task: URLSessionDataTask!
     private unowned let delegate: DataTaskHandler
     
+    /// Initializes a new DataTaskSubscription.
+    ///
+    /// - Parameters:
+    ///   - subscriber: The subscriber to receive updates.
+    ///   - session: The URLSession to use.
+    ///   - request: The URLRequest to perform.
+    ///   - delegate: The DataTaskHandler to handle data task events.
     public init(subscriber: SubscriberType, session: URLSession, request: URLRequest, delegate: DataTaskHandler) {
         self.subscriber = subscriber
         self.session = session
@@ -118,6 +180,9 @@ public class DataTaskSubscription<SubscriberType: Subscriber>: NSObject, Subscri
         self.delegate = delegate
     }
     
+    /// Requests the publisher to begin sending values.
+    ///
+    /// - Parameter demand: The number of values to request.
     public func request(_ demand: Subscribers.Demand) {
         guard demand > 0 else { return }
         
@@ -151,6 +216,7 @@ public class DataTaskSubscription<SubscriberType: Subscriber>: NSObject, Subscri
         self.task.resume()
     }
     
+    /// Cancels the subscription, stopping the data task.
     public func cancel() {
         self.task.cancel()
     }

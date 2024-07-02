@@ -11,6 +11,15 @@ public enum APIError: Error {
 }
 
 public extension APIService {
+    /// Performs a network request and decodes the response data into a specified type.
+    ///
+    /// - Parameters:
+    ///   - endpoint: The endpoint to request.
+    ///   - decodingType: The type to decode the response data into.
+    ///   - decoder: The decoder to use for decoding the response data. Default is `JSONDecoder()`.
+    ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
+    ///   - retries: The number of times to retry the request in case of failure. Default is 0.
+    /// - Returns: A publisher that emits the decoded response data or an error.
     func request<T, Decoder>(
         _ endpoint: Endpoint,
         decodingType: T.Type,
@@ -40,6 +49,12 @@ public extension APIService {
             .eraseToAnyPublisher()
     }
     
+    /// Performs a network request and returns the response data.
+    ///
+    /// - Parameters:
+    ///   - endpoint: The endpoint to request.
+    ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
+    /// - Returns: A publisher that emits the response data or a URL error.
     func requestData(
         _ endpoint: Endpoint,
         queue: DispatchQueue = .main
@@ -55,6 +70,12 @@ public extension APIService {
             .eraseToAnyPublisher()
     }
     
+    /// Performs a network request to download a file and returns the file URL.
+    ///
+    /// - Parameters:
+    ///   - endpoint: The endpoint to request.
+    ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
+    /// - Returns: A publisher that emits the file URL or a URL error.
     func download(
         _ endpoint: Endpoint,
         queue: DispatchQueue = .main

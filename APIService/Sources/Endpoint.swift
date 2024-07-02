@@ -1,9 +1,11 @@
 import Foundation
 
+/// Protocol that defines a type that can be converted to a URLRequest.
 public protocol URLRequestConvertible {
     var urlRequest: URLRequest? { get }
 }
 
+/// Enumeration of HTTP methods.
 public enum HttpMethod: String {
     case get = "GET"
     case post = "POST"
@@ -12,6 +14,7 @@ public enum HttpMethod: String {
     case patch = "PATCH"
 }
 
+/// Protocol that defines the properties of an endpoint.
 public protocol Endpoint: URLRequestConvertible {
     var base: String? { get }
     var path: String? { get }
@@ -33,6 +36,7 @@ public extension Endpoint {
 }
 
 public extension Endpoint {
+    /// Constructs URLComponents from the endpoint's properties.
     private var urlComponents: URLComponents? {
         var components: URLComponents?
         
@@ -52,6 +56,7 @@ public extension Endpoint {
         return components
     }
     
+    /// Constructs a URLRequest from the endpoint's properties.
     var urlRequest: URLRequest? {
         guard let url = urlComponents?.url else { return nil }
         var request = URLRequest(url: url)

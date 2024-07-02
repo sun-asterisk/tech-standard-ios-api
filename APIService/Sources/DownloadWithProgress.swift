@@ -1,16 +1,29 @@
 import Foundation
 import Combine
 
+/// Protocol that provides properties for URLSession and DownloadTaskHandler.
 public protocol DownloadWithProgress {
     var downloadSession: URLSession { get }
     var downloadTaskHandler: DownloadTaskHandler { get }
 }
 
 public extension APIService where Self: DownloadWithProgress {
+    /// Creates a DownloadTaskPublisher for the given URLRequest and delegate.
+    ///
+    /// - Parameters:
+    ///   - request: The URLRequest to create the publisher for.
+    ///   - delegate: The delegate to handle download task events.
+    /// - Returns: A DownloadTaskPublisher instance.
     private func downloadTaskPublisher(for request: URLRequest, delegate: DownloadTaskHandler) -> DownloadTaskPublisher {
         .init(request: request, session: self.downloadSession, delegate: delegate)
     }
     
+    /// Performs a download request and returns the file URL along with progress updates.
+    ///
+    /// - Parameters:
+    ///   - endpoint: The endpoint to request.
+    ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
+    /// - Returns: A publisher that emits a tuple containing optional file URL and progress or an error.
     func downloadWithProgress(
         _ endpoint: Endpoint,
         queue: DispatchQueue = .main
@@ -26,34 +39,62 @@ public extension APIService where Self: DownloadWithProgress {
     }
 }
 
+/// Class that handles URLSession download task events.
 public class DownloadTaskHandler: NSObject, URLSessionDownloadDelegate {
     var didFinishDownloading: ((_ requestURL: URL, _ location: URL) -> Void)?
     var didWriteData: ((_ requestURL: URL, _ bytesWritten: Int64, _ totalBytesWritten: Int64, _ totalBytesExpectedToWrite: Int64) -> Void)?
     var didResume: ((_ requestURL: URL, _ fileOffset: Int64, _ expectedTotalBytes: Int64) -> Void)?
     var didComplete: ((_ requestURL: URL, _ error: Error?) -> Void)?
     
+    /// Called when the download task finishes downloading.
+    ///
+    /// - Parameters:
+    ///   - session: The URLSession.
+    ///   - downloadTask: The URLSessionDownloadTask.
+    ///   - location: The location of the downloaded file.
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         guard let url = downloadTask.originalRequest?.url else { return }
         didFinishDownloading?(url, location)
     }
     
+    /// Called when the download task writes data.
+    ///
+    /// - Parameters:
+    ///   - session: The URLSession.
+    ///   - downloadTask: The URLSessionDownloadTask.
+    ///   - bytesWritten: The number of bytes written.
+    ///   - totalBytesWritten: The total number of bytes written.
+    ///   - totalBytesExpectedToWrite: The expected total number of bytes to be written.
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         guard let url = downloadTask.originalRequest?.url else { return }
         didWriteData?(url, bytesWritten, totalBytesWritten, totalBytesExpectedToWrite)
     }
 
+    /// Called when the download task resumes.
+    ///
+    /// - Parameters:
+    ///   - session: The URLSession.
+    ///   - downloadTask: The URLSessionDownloadTask.
+    ///   - fileOffset: The file offset where the download task resumed.
+    ///   - expectedTotalBytes: The expected total number of bytes to be written.
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didResumeAtOffset fileOffset: Int64, expectedTotalBytes: Int64) {
-        print("resume")
         guard let url = downloadTask.originalRequest?.url else { return }
         didResume?(url, fileOffset, expectedTotalBytes)
     }
     
+    /// Called when the download task completes.
+    ///
+    /// - Parameters:
+    ///   - session: The URLSession.
+    ///   - task: The URLSessionTask.
+    ///   - error: The error that occurred, if any.
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard let url = task.originalRequest?.url else { return }
         didComplete?(url, error)
     }
 }
 
+/// A publisher that handles URLSession download tasks and emits file URL and progress updates.
 public struct DownloadTaskPublisher: Publisher {
     
     public typealias Output = (url: URL?, progress: Double?)
@@ -63,12 +104,21 @@ public struct DownloadTaskPublisher: Publisher {
     private let session: URLSession
     private unowned let delegate: DownloadTaskHandler
     
+    /// Initializes a new DownloadTaskPublisher.
+    ///
+    /// - Parameters:
+    ///   - request: The URLRequest to perform.
+    ///   - session: The URLSession to use.
+    ///   - delegate: The DownloadTaskHandler to handle download task events.
     public init(request: URLRequest, session: URLSession, delegate: DownloadTaskHandler) {
         self.request = request
         self.session = session
         self.delegate = delegate
     }
     
+    /// Attaches the specified subscriber to this publisher.
+    ///
+    /// - Parameter subscriber: The subscriber to attach to this publisher.
     public func receive<S>(subscriber: S) where S: Subscriber,
                                                 DownloadTaskPublisher.Failure == S.Failure,
                                                 DownloadTaskPublisher.Output == S.Input
@@ -84,6 +134,7 @@ public struct DownloadTaskPublisher: Publisher {
     }
 }
 
+/// A subscription that handles URLSession download tasks and provides updates to the subscriber.
 public class DownloadTaskSubscription<SubscriberType: Subscriber>: NSObject, Subscription where
     SubscriberType.Input == (url: URL?, progress: Double?),
     SubscriberType.Failure == URLError
@@ -94,6 +145,13 @@ public class DownloadTaskSubscription<SubscriberType: Subscriber>: NSObject, Sub
     private var task: URLSessionDownloadTask!
     private unowned let delegate: DownloadTaskHandler
     
+    /// Initializes a new DownloadTaskSubscription.
+    ///
+    /// - Parameters:
+    ///   - subscriber: The subscriber to receive updates.
+    ///   - session: The URLSession to use.
+    ///   - request: The URLRequest to perform.
+    ///   - delegate: The DownloadTaskHandler to handle download task events.
     public init(subscriber: SubscriberType, session: URLSession, request: URLRequest, delegate: DownloadTaskHandler) {
         self.subscriber = subscriber
         self.session = session
@@ -101,6 +159,9 @@ public class DownloadTaskSubscription<SubscriberType: Subscriber>: NSObject, Sub
         self.delegate = delegate
     }
     
+    /// Requests the publisher to begin sending values.
+    ///
+    /// - Parameter demand: The number of values to request.
     public func request(_ demand: Subscribers.Demand) {
         guard demand > 0 else { return }
         
@@ -141,6 +202,7 @@ public class DownloadTaskSubscription<SubscriberType: Subscriber>: NSObject, Sub
         self.task.resume()
     }
     
+    /// Cancels the subscription, stopping the download task.
     public func cancel() {
         self.task.cancel()
     }
