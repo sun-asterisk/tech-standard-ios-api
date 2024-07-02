@@ -6,6 +6,10 @@ public protocol APIService {
     var session: URLSession { get }
 }
 
+public enum APIError: Error {
+    case httpResponse(response: HTTPURLResponse)
+}
+
 public extension APIService {
     func request<T, Decoder>(
         _ endpoint: Endpoint,
@@ -19,11 +23,16 @@ public extension APIService {
         }
     
         return session.dataTaskPublisher(for: urlRequest)
-            .tryMap {
-                guard let response = $0.response as? HTTPURLResponse, response.statusCode == 200 else {
+            .tryMap { output in
+                guard let httpResponse = output.response as? HTTPURLResponse else {
                     throw URLError(.badServerResponse)
                 }
-                return $0.data
+                
+                guard 200..<300 ~= httpResponse.statusCode else {
+                    throw APIError.httpResponse(response: httpResponse)
+                }
+                
+                return output.data
             }
             .decode(type: T.self, decoder: decoder)
             .receive(on: queue)
