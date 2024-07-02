@@ -10,7 +10,7 @@ To integrate `APIService` into your project using Swift Package Manager, add the
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/APIService.git", from: "0.2.0")
+    .package(url: "https://github.com/sun-asterisk/tech-standard-ios-api", from: "0.2.0")
 ]
 ```
 
