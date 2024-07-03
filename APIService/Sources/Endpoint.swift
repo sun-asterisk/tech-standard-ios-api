@@ -62,8 +62,9 @@ public extension Endpoint {
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod.rawValue
         
-        if let body,
-            let jsonData = try? JSONSerialization.data(withJSONObject: body, options: .prettyPrinted) {
+        if httpMethod != .get,
+           let body,
+           let jsonData = try? JSONSerialization.data(withJSONObject: body, options: .prettyPrinted) {
             request.httpBody = jsonData
         }
         
