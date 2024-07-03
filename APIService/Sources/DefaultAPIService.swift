@@ -1,17 +1,29 @@
 import Foundation
 
+/// A singleton class that conforms to `APIService`, `DownloadWithProgress`, and `DataWithProgress` protocols.
+/// Provides a default implementation for making network requests, downloading files with progress, and handling data tasks with progress.
 public final class DefaultAPIService: APIService, DownloadWithProgress, DataWithProgress {
+    /// The shared instance of `DefaultAPIService`.
     public static let shared = DefaultAPIService()
+    
+    /// The URLSession used for general network requests.
     public let session: URLSession
     
     // DownloadWithProgress
+    /// The URLSession used for download tasks with progress.
     public var downloadSession: URLSession
+    
+    /// The handler for managing download task events.
     public var downloadTaskHandler = DownloadTaskHandler()
     
     // DataWithProgress
+    /// The URLSession used for data tasks with progress.
     public var dataSession: URLSession
+    
+    /// The handler for managing data task events.
     public var dataTaskHandler = DataTaskHandler()
     
+    /// Private initializer to ensure singleton usage.
     private init() {
         // Session for request
         self.session = URLSession(configuration: .default, delegate: nil, delegateQueue: nil)

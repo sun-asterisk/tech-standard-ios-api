@@ -2,11 +2,15 @@ import Foundation
 import Combine
 import UIKit
 
+/// A protocol that defines the requirements for an API service.
 public protocol APIService {
+    /// The URLSession instance used to perform network requests.
     var session: URLSession { get }
 }
 
+/// An enumeration representing possible errors that can occur during API requests.
 public enum APIError: Error {
+    /// Represents an error when the HTTP response status code is not in the range 200-299.
     case httpResponse(response: HTTPURLResponse)
 }
 
