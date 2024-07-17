@@ -11,7 +11,7 @@ public protocol APIService {
 /// An enumeration representing possible errors that can occur during API requests.
 public enum APIError: Error {
     /// Represents an error when the HTTP response status code is not in the range 200-299.
-    case httpResponse(response: HTTPURLResponse)
+    case badRequest(response: HTTPURLResponse, data: Data)
 }
 
 public extension APIService {
@@ -42,7 +42,7 @@ public extension APIService {
                 }
                 
                 guard 200..<300 ~= httpResponse.statusCode else {
-                    throw APIError.httpResponse(response: httpResponse)
+                    throw APIError.badRequest(response: httpResponse, data: output.data)
                 }
                 
                 return output.data
