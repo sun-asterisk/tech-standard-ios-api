@@ -7,7 +7,11 @@ import os.log
 public protocol APIService: AnyObject {
     /// The URLSession instance used to perform network requests.
     var session: URLSession { get }
-    var logger: APILogger? { get set }
+    var logger: APILogger? { get }
+}
+
+public extension APIService {
+    var logger: APILogger? { CompactLogger.shared }
 }
 
 /// An enumeration representing possible errors that can occur during API requests.
