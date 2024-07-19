@@ -113,11 +113,6 @@ public extension APIService {
             .map { $0.url }
             .receive(on: queue)
             .mapError { $0 as Error }
-            .handleEvents(receiveOutput: { url in
-                os_log("Downloaded file URL: %{PUBLIC}@", log: .default, type: .info, url.absoluteString)
-            })
             .eraseToAnyPublisher()
-        
-        
     }
 }

@@ -31,6 +31,8 @@ public extension APIService where Self: DownloadWithProgress {
         guard let urlRequest = endpoint.urlRequest else {
             return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
         }
+        
+        logger?.logRequest(urlRequest)
     
         return downloadTaskPublisher(for: urlRequest, delegate: downloadTaskHandler)
             .mapError { $0 as Error }

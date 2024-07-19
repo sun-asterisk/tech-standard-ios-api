@@ -58,7 +58,7 @@ class ViewModel: ObservableObject {
 //                        print("Download failed for \(url): \(error)")
 //                    }
 //                }, receiveValue: { [weak self] fileURL, progress in
-//                    self?.progressDict[url] = (progress, fileURL)
+//                    self?.progressDict[url] = (progress, nil)
 //                    
 //                    if let fileURL {
 //                        print("File downloaded", fileURL)
@@ -79,7 +79,7 @@ class ViewModel: ObservableObject {
 //                })
 //                .store(in: &cancellables)
             
-            apiService.requestDataWithProgress(DownloadFileEndpoint.image(url: url.absoluteString))
+            apiService.requestData(DownloadFileEndpoint.image(url: url.absoluteString))
                 .sink(receiveCompletion: { completion in
                     switch completion {
                     case .finished:
@@ -87,10 +87,23 @@ class ViewModel: ObservableObject {
                     case .failure(let error):
                         print("Download failed for \(url): \(error)")
                     }
-                }, receiveValue: { [weak self] data, progress in
-                    self?.progressDict[url] = (progress, data)
+                }, receiveValue: { data in
+                    print("File downloaded")
                 })
                 .store(in: &cancellables)
+            
+//            apiService.requestDataWithProgress(DownloadFileEndpoint.image(url: url.absoluteString))
+//                .sink(receiveCompletion: { completion in
+//                    switch completion {
+//                    case .finished:
+//                        print("Download finished for \(url)")
+//                    case .failure(let error):
+//                        print("Download failed for \(url): \(error)")
+//                    }
+//                }, receiveValue: { [weak self] data, progress in
+//                    self?.progressDict[url] = (progress, data)
+//                })
+//                .store(in: &cancellables)
             
         }
     }
