@@ -9,7 +9,7 @@ public protocol APILogger: AnyObject {
 public class VerboseLogger: APILogger {
     public static let shared = VerboseLogger()
     
-    public var prefix = "[API]"
+    public var prefix: String? = "[API]"
     
     public func logRequest(_ urlRequest: URLRequest) {
         var logString = "\(urlRequest.httpMethod ?? "UNKNOWN") \(urlRequest.url?.path ?? "UNKNOWN")\n"
@@ -28,7 +28,9 @@ public class VerboseLogger: APILogger {
             logString += "\n\(bodyString)"
         }
         
-        logString = prefix + " " + logString
+        if let prefix {
+            logString = prefix + " " + logString
+        }
         
         os_log("%{PUBLIC}@", log: .default, type: .info, logString)
     }
@@ -54,7 +56,9 @@ public class VerboseLogger: APILogger {
             logString += "\n\(String(data: data, encoding: .utf8) ?? "Bad Data")"
         }
         
-        logString = prefix + " " + logString
+        if let prefix {
+            logString = prefix + " " + logString
+        }
         
         os_log("%{PUBLIC}@", log: .default, type: .info, logString)
     }
@@ -63,12 +67,16 @@ public class VerboseLogger: APILogger {
 public class CompactLogger: APILogger {
     public static let shared = CompactLogger()
     
-    public var prefix = "[API]"
+    public var prefix: String? = "[API]"
     
     public func logRequest(_ urlRequest: URLRequest) {
         let method = urlRequest.httpMethod ?? "UNKNOWN"
         let urlString = urlRequest.url?.absoluteString ?? ""
-        let logString = prefix + " " + method + " " + urlString
+        var logString = method + " " + urlString
+        
+        if let prefix {
+            logString = prefix + " " + logString
+        }
         
         os_log("%{PUBLIC}@", log: .default, type: .info, logString)
     }
@@ -82,7 +90,9 @@ public class CompactLogger: APILogger {
             logString += "Bad Response"
         }
         
-        logString = prefix + " " + logString
+        if let prefix {
+            logString = prefix + " " + logString
+        }
         
         os_log("%{PUBLIC}@", log: .default, type: .info, logString)
     }

@@ -17,6 +17,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     ) -> Bool {
         TokenManager.shared.setToken("test token")
 //        DefaultAPIService.shared.logger = VerboseLogger.shared
+        CompactLogger.shared.prefix = nil
         
         return true
     }
