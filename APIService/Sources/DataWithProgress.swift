@@ -32,6 +32,8 @@ public extension APIService where Self: DataWithProgress {
             return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
         }
         
+        logger?.logRequest(urlRequest)
+        
         return dataTaskPublisher(for: urlRequest, delegate: dataTaskHandler)
             .mapError { $0 as Error }
             .receive(on: queue)
@@ -41,11 +43,17 @@ public extension APIService where Self: DataWithProgress {
 
 /// Class that handles URLSession data task events.
 public class DataTaskHandler: NSObject, URLSessionDataDelegate {
-    var didFinishReceiving: ((_ requestURL: URL, _ data: Data) -> Void)?
-    var didReceive: ((_ requestURL: URL, _ totalBytesReceived: Int64, _ totalBytesExpectedToReceive: Int64, _ data: Data) -> Void)?
-    var didComplete: ((_ requestURL: URL, _ error: Error?) -> Void)?
+    public var didFinishReceiving: ((_ requestURL: URL, _ data: Data) -> Void)?
+    public var didReceive: ((_ requestURL: URL, _ totalBytesReceived: Int64, _ totalBytesExpectedToReceive: Int64, _ data: Data) -> Void)?
+    public var didComplete: ((_ requestURL: URL, _ error: Error?) -> Void)?
+    public weak var logger: APILogger?
     
     private var receivedDataDict = [URL: Data]()
+    
+    public init(logger: APILogger? = CompactLogger.shared) {
+        self.logger = logger
+        super.init()
+    }
     
     /// Gets the received data for the given URL.
     ///
@@ -81,6 +89,8 @@ public class DataTaskHandler: NSObject, URLSessionDataDelegate {
     ///   - error: The error that occurred, if any.
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard let url = task.originalRequest?.url else { return }
+        
+        logger?.logResponse(task.response, data: nil)
         
         if let error = error as? URLError {
             didComplete?(url, error)

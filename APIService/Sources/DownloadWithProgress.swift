@@ -41,10 +41,17 @@ public extension APIService where Self: DownloadWithProgress {
 
 /// Class that handles URLSession download task events.
 public class DownloadTaskHandler: NSObject, URLSessionDownloadDelegate {
-    var didFinishDownloading: ((_ requestURL: URL, _ location: URL) -> Void)?
-    var didWriteData: ((_ requestURL: URL, _ bytesWritten: Int64, _ totalBytesWritten: Int64, _ totalBytesExpectedToWrite: Int64) -> Void)?
-    var didResume: ((_ requestURL: URL, _ fileOffset: Int64, _ expectedTotalBytes: Int64) -> Void)?
-    var didComplete: ((_ requestURL: URL, _ error: Error?) -> Void)?
+    public var didFinishDownloading: ((_ requestURL: URL, _ location: URL) -> Void)?
+    public var didWriteData: ((_ requestURL: URL, _ bytesWritten: Int64, _ totalBytesWritten: Int64, _ totalBytesExpectedToWrite: Int64) -> Void)?
+    public var didResume: ((_ requestURL: URL, _ fileOffset: Int64, _ expectedTotalBytes: Int64) -> Void)?
+    public var didComplete: ((_ requestURL: URL, _ error: Error?) -> Void)?
+    
+    public weak var logger: APILogger?
+    
+    public init(logger: APILogger? = CompactLogger.shared) {
+        self.logger = logger
+        super.init()
+    }
     
     /// Called when the download task finishes downloading.
     ///
@@ -54,6 +61,7 @@ public class DownloadTaskHandler: NSObject, URLSessionDownloadDelegate {
     ///   - location: The location of the downloaded file.
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         guard let url = downloadTask.originalRequest?.url else { return }
+        logger?.logResponse(downloadTask.response, data: nil)
         didFinishDownloading?(url, location)
     }
     

@@ -16,6 +16,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         TokenManager.shared.setToken("test token")
+//        DefaultAPIService.shared.logger = VerboseLogger.shared
         
         return true
     }

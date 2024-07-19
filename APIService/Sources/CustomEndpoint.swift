@@ -43,7 +43,7 @@ public struct CustomEndpoint: Endpoint {
     }
 
     /// The URL request for the endpoint.
-    public var urlRequest: URLRequest? { endpoint.urlRequest }
+//    public var urlRequest: URLRequest? { endpoint.urlRequest }
 
     private let endpoint: Endpoint
     private let overrides: OverrideOptions
@@ -135,18 +135,18 @@ public extension Endpoint {
 
     /// Adds headers to the endpoint by merging with existing headers.
     ///
-    /// - Parameter headersToMerge: The headers to merge with existing headers.
+    /// - Parameter additionalHeaders: The headers to merge with existing headers.
     /// - Returns: A new endpoint with the merged headers.
-    func add(headersToMerge: [String: Any]) -> Endpoint {
-        let mergedHeader: [String: Any]
+    func add(additionalHeaders: [String: Any]) -> Endpoint {
+        let newHeaders: [String: Any]
         
         if let currentHeaders = self.headers {
-            mergedHeader = mergeDictionaries(currentHeaders, headersToMerge)
+            newHeaders = mergeDictionaries(currentHeaders, additionalHeaders)
         } else {
-            mergedHeader = headersToMerge
+            newHeaders = additionalHeaders
         }
         
-        return CustomEndpoint(endpoint: self, overrides: .headers(mergedHeader))
+        return CustomEndpoint(endpoint: self, overrides: .headers(newHeaders))
     }
 
     /// Merges two dictionaries.

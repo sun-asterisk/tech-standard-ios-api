@@ -28,7 +28,7 @@ struct DownloadImageView: View {
             }
             Button("Start Downloads") {
                 let urls = [
-                    URL(string: "https://file-examples.com/storage/fe3cb26995666504a8d6180/2017/04/file_example_MP4_640_3MG.mp4")!
+                    URL(string: "https://file-examples.com/storage/fe9f6f893066954d9aac3a2/2017/04/file_example_MP4_640_3MG.mp4")!
                 ]
                 viewModel.startDownload(urls: urls)
             }

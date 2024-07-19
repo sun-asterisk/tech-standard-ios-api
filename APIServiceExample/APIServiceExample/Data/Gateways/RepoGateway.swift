@@ -23,16 +23,16 @@ final class RepoGateway: RepoGatewayProtocol {
     func getRepos(page: Int, perPage: Int) -> AnyPublisher<[Repo], Error> {
         GitEndpoint.repos(page: page, perPage: perPage)
             .add(headers: { ep in
-                let token = "a token"
+                let device = "iOS"
                 
                 if var currentHeaders = ep.headers {
-                    currentHeaders["token"] = token
+                    currentHeaders["Device"] = device
                     return currentHeaders
                 }
                 
-                return ["token": token]
+                return ["Device": device]
             })
-            .add(headersToMerge: ["version": 1.5])
+            .add(additionalHeaders: ["version": 1.5])
             .publisher
             .addToken(manager: TokenManager.shared)
             .map { ep in

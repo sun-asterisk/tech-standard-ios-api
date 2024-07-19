@@ -23,6 +23,13 @@ public final class DefaultAPIService: APIService, DownloadWithProgress, DataWith
     /// The handler for managing data task events.
     public var dataTaskHandler = DataTaskHandler()
     
+    public var logger: APILogger? = CompactLogger.shared {
+        didSet {
+            dataTaskHandler.logger = logger
+            downloadTaskHandler.logger = logger
+        }
+    }
+    
     /// Private initializer to ensure singleton usage.
     private init() {
         // Session for request

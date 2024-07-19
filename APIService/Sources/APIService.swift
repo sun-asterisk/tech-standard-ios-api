@@ -1,11 +1,13 @@
 import Foundation
 import Combine
 import UIKit
+import os.log
 
 /// A protocol that defines the requirements for an API service.
-public protocol APIService {
+public protocol APIService: AnyObject {
     /// The URLSession instance used to perform network requests.
     var session: URLSession { get }
+    var logger: APILogger? { get set }
 }
 
 /// An enumeration representing possible errors that can occur during API requests.
@@ -15,6 +17,7 @@ public enum APIError: Error {
 }
 
 public extension APIService {
+    
     /// Performs a network request and decodes the response data into a specified type.
     ///
     /// - Parameters:
@@ -34,9 +37,13 @@ public extension APIService {
         guard let urlRequest = endpoint.urlRequest else {
             return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
         }
-    
+        
+        logger?.logRequest(urlRequest)
+        
         return session.dataTaskPublisher(for: urlRequest)
-            .tryMap { output in
+            .tryMap { [weak self] output in
+                self?.logger?.logResponse(output.response, data: output.data)
+                
                 guard let httpResponse = output.response as? HTTPURLResponse else {
                     throw URLError(.badServerResponse)
                 }
@@ -62,15 +69,20 @@ public extension APIService {
     func requestData(
         _ endpoint: Endpoint,
         queue: DispatchQueue = .main
-    ) -> AnyPublisher<Data, URLError> {
+    ) -> AnyPublisher<Data, Error> {
         guard let urlRequest = endpoint.urlRequest else {
             return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
         }
         
+        logger?.logRequest(urlRequest)
+        
         return session.dataTaskPublisher(for: urlRequest)
+            .handleEvents(receiveOutput: { [weak self] output in
+                self?.logger?.logResponse(output.response, data: nil)
+            })
             .map { $0.data }
-            .mapError { $0 as URLError }
             .receive(on: queue)
+            .mapError { $0 as Error }
             .eraseToAnyPublisher()
     }
     
@@ -83,15 +95,25 @@ public extension APIService {
     func download(
         _ endpoint: Endpoint,
         queue: DispatchQueue = .main
-    ) -> AnyPublisher<URL, URLError> {
+    ) -> AnyPublisher<URL, Error> {
         guard let urlRequest = endpoint.urlRequest else {
             return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
         }
         
+        logger?.logRequest(urlRequest)
+        
         return session.downloadTaskPublisher(for: urlRequest)
+            .handleEvents(receiveOutput: { [weak self] output in
+                self?.logger?.logResponse(output.response, data: nil)
+            })
             .map { $0.url }
-            .mapError { $0 as URLError }
             .receive(on: queue)
+            .mapError { $0 as Error }
+            .handleEvents(receiveOutput: { url in
+                os_log("Downloaded file URL: %{PUBLIC}@", log: .default, type: .info, url.absoluteString)
+            })
             .eraseToAnyPublisher()
+        
+        
     }
 }
