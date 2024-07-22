@@ -25,6 +25,14 @@ public struct CustomEndpoint: Endpoint {
         }
         return endpoint.urlString
     }
+    
+    /// The http method for the endpoint.
+    public var httpMethod: HttpMethod {
+        if case let .httpMethod(value) = overrides {
+            return value
+        }
+        return endpoint.httpMethod
+    }
 
     /// The headers for the endpoint.
     public var headers: [String: Any]? {
@@ -41,9 +49,14 @@ public struct CustomEndpoint: Endpoint {
         }
         return endpoint.queryItems
     }
-
-    /// The URL request for the endpoint.
-//    public var urlRequest: URLRequest? { endpoint.urlRequest }
+    
+    /// The body for the endpoint.
+    public var body: [String: Any]? {
+        if case let .body(value) = overrides {
+            return value
+        }
+        return endpoint.body
+    }
 
     private let endpoint: Endpoint
     private let overrides: OverrideOptions
@@ -64,8 +77,10 @@ public enum OverrideOptions {
     case base(String)
     case path(String)
     case urlString(String)
+    case httpMethod(HttpMethod)
     case headers([String: Any])
     case queryItems([String: Any])
+    case body([String: Any])
 }
 
 public extension Endpoint {
@@ -115,6 +130,14 @@ public extension Endpoint {
     /// - Returns: A new endpoint with the URL string added.
     func add(urlString: (Self) -> String) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .urlString(urlString(self)))
+    }
+    
+    func add(httpMethod: HttpMethod) -> Endpoint {
+        CustomEndpoint(endpoint: self, overrides: .httpMethod(httpMethod))
+    }
+    
+    func add(httpMethod: (Self) -> HttpMethod) -> Endpoint {
+        CustomEndpoint(endpoint: self, overrides: .httpMethod(httpMethod(self)))
     }
 
     /// Adds headers to the endpoint.

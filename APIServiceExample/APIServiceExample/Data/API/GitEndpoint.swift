@@ -36,6 +36,15 @@ extension GitEndpoint: Endpoint {
         }
     }
     
+    var httpMethod: HttpMethod {
+        switch self {
+        case .repos:
+            return .post
+        case .events:
+            return .get
+        }
+    }
+    
     var queryItems: [String : Any]? {
         switch self {
         case let .repos(page, perPage):
