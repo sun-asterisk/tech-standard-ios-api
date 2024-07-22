@@ -43,61 +43,45 @@ public extension APIService where Self: DownloadWithProgress {
 
 /// Class that handles URLSession download task events.
 public class DownloadTaskHandler: NSObject, URLSessionDownloadDelegate {
+    /// A closure to be called when the download task finishes downloading.
     public var didFinishDownloading: ((_ requestURL: URL, _ location: URL) -> Void)?
+    
+    /// A closure to be called when the download task writes data.
     public var didWriteData: ((_ requestURL: URL, _ bytesWritten: Int64, _ totalBytesWritten: Int64, _ totalBytesExpectedToWrite: Int64) -> Void)?
+    
+    /// A closure to be called when the download task resumes.
     public var didResume: ((_ requestURL: URL, _ fileOffset: Int64, _ expectedTotalBytes: Int64) -> Void)?
+    
+    /// A closure to be called when the download task completes.
     public var didComplete: ((_ requestURL: URL, _ error: Error?) -> Void)?
     
+    /// An optional logger for logging requests and responses.
     public weak var logger: APILogger?
     
+    /// Initializes a new instance of DownloadTaskHandler with an optional logger.
+    ///
+    /// - Parameter logger: The logger to use for logging requests and responses. Default is `CompactLogger.shared`.
     public init(logger: APILogger? = CompactLogger.shared) {
         self.logger = logger
         super.init()
     }
     
-    /// Called when the download task finishes downloading.
-    ///
-    /// - Parameters:
-    ///   - session: The URLSession.
-    ///   - downloadTask: The URLSessionDownloadTask.
-    ///   - location: The location of the downloaded file.
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         guard let url = downloadTask.originalRequest?.url else { return }
         logger?.logResponse(downloadTask.response, data: nil)
         didFinishDownloading?(url, location)
     }
     
-    /// Called when the download task writes data.
-    ///
-    /// - Parameters:
-    ///   - session: The URLSession.
-    ///   - downloadTask: The URLSessionDownloadTask.
-    ///   - bytesWritten: The number of bytes written.
-    ///   - totalBytesWritten: The total number of bytes written.
-    ///   - totalBytesExpectedToWrite: The expected total number of bytes to be written.
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         guard let url = downloadTask.originalRequest?.url else { return }
         didWriteData?(url, bytesWritten, totalBytesWritten, totalBytesExpectedToWrite)
     }
 
-    /// Called when the download task resumes.
-    ///
-    /// - Parameters:
-    ///   - session: The URLSession.
-    ///   - downloadTask: The URLSessionDownloadTask.
-    ///   - fileOffset: The file offset where the download task resumed.
-    ///   - expectedTotalBytes: The expected total number of bytes to be written.
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didResumeAtOffset fileOffset: Int64, expectedTotalBytes: Int64) {
         guard let url = downloadTask.originalRequest?.url else { return }
         didResume?(url, fileOffset, expectedTotalBytes)
     }
     
-    /// Called when the download task completes.
-    ///
-    /// - Parameters:
-    ///   - session: The URLSession.
-    ///   - task: The URLSessionTask.
-    ///   - error: The error that occurred, if any.
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard let url = task.originalRequest?.url else { return }
         didComplete?(url, error)

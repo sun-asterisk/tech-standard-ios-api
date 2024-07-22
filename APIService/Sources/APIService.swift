@@ -64,6 +64,41 @@ public extension APIService {
             .eraseToAnyPublisher()
     }
     
+    /// Performs a network request without expecting any response data.
+    ///
+    /// - Parameters:
+    ///   - endpoint: The endpoint to request.
+    ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
+    ///   - retries: The number of times to retry the request in case of failure. Default is 0.
+    /// - Returns: A publisher that emits `Void` if the request succeeds or an error if it fails.
+    func requestPlain(
+        _ endpoint: Endpoint,
+        queue: DispatchQueue = .main,
+        retries: Int = 0
+    ) -> AnyPublisher<Void, Error> {
+        guard let urlRequest = endpoint.urlRequest else {
+            return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
+        }
+        
+        logger?.logRequest(urlRequest)
+        
+        return session.dataTaskPublisher(for: urlRequest)
+            .tryMap { [weak self] output -> Void in
+                self?.logger?.logResponse(output.response, data: nil)
+                
+                guard let httpResponse = output.response as? HTTPURLResponse else {
+                    throw URLError(.badServerResponse)
+                }
+                
+                guard 200..<300 ~= httpResponse.statusCode else {
+                    throw APIError.badRequest(response: httpResponse, data: output.data)
+                }
+            }
+            .receive(on: queue)
+            .retry(retries)
+            .eraseToAnyPublisher()
+    }
+    
     /// Performs a network request and returns the response data.
     ///
     /// - Parameters:

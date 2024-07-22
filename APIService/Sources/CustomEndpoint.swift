@@ -132,10 +132,18 @@ public extension Endpoint {
         CustomEndpoint(endpoint: self, overrides: .urlString(urlString(self)))
     }
     
+    /// Adds an HTTP method to the endpoint.
+    ///
+    /// - Parameter httpMethod: The HTTP method to add.
+    /// - Returns: A new endpoint with the HTTP method added.
     func add(httpMethod: HttpMethod) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .httpMethod(httpMethod))
     }
-    
+
+    /// Adds an HTTP method to the endpoint using a closure.
+    ///
+    /// - Parameter httpMethod: A closure that returns the HTTP method to add.
+    /// - Returns: A new endpoint with the HTTP method added.
     func add(httpMethod: (Self) -> HttpMethod) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .httpMethod(httpMethod(self)))
     }

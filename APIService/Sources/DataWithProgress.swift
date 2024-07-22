@@ -43,13 +43,24 @@ public extension APIService where Self: DataWithProgress {
 
 /// Class that handles URLSession data task events.
 public class DataTaskHandler: NSObject, URLSessionDataDelegate {
+    /// A closure to be called when data has finished receiving.
     public var didFinishReceiving: ((_ requestURL: URL, _ data: Data) -> Void)?
+    
+    /// A closure to be called when data is received.
     public var didReceive: ((_ requestURL: URL, _ totalBytesReceived: Int64, _ totalBytesExpectedToReceive: Int64, _ data: Data) -> Void)?
+    
+    /// A closure to be called when the data task completes.
     public var didComplete: ((_ requestURL: URL, _ error: Error?) -> Void)?
+    
+    /// An optional logger for logging requests and responses.
     public weak var logger: APILogger?
     
+    /// A dictionary to store received data for each URL.
     private var receivedDataDict = [URL: Data]()
     
+    /// Initializes a new instance of DataTaskHandler with an optional logger.
+    ///
+    /// - Parameter logger: The logger to use for logging requests and responses. Default is `CompactLogger.shared`.
     public init(logger: APILogger? = CompactLogger.shared) {
         self.logger = logger
         super.init()
@@ -63,12 +74,6 @@ public class DataTaskHandler: NSObject, URLSessionDataDelegate {
         receivedDataDict[url] ?? Data()
     }
     
-    /// Called when the data task receives data.
-    ///
-    /// - Parameters:
-    ///   - session: The URLSession.
-    ///   - dataTask: The URLSessionDataTask.
-    ///   - data: The received data.
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         guard let url = dataTask.originalRequest?.url else { return }
         // Append received data
@@ -81,12 +86,6 @@ public class DataTaskHandler: NSObject, URLSessionDataDelegate {
         didReceive?(url, totalBytesReceived, totalBytesExpectedToReceive, receivedData)
     }
     
-    /// Called when the data task completes.
-    ///
-    /// - Parameters:
-    ///   - session: The URLSession.
-    ///   - task: The URLSessionTask.
-    ///   - error: The error that occurred, if any.
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard let url = task.originalRequest?.url else { return }
         
@@ -102,24 +101,10 @@ public class DataTaskHandler: NSObject, URLSessionDataDelegate {
         receivedDataDict[url] = nil
     }
     
-    /// Called when the data task receives a response and decides whether to cache it.
-    ///
-    /// - Parameters:
-    ///   - session: The URLSession.
-    ///   - dataTask: The URLSessionDataTask.
-    ///   - proposedResponse: The proposed cached response.
-    ///   - completionHandler: The completion handler to call with the cached response.
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, willCacheResponse proposedResponse: CachedURLResponse, completionHandler: @escaping (CachedURLResponse?) -> Void) {
         completionHandler(proposedResponse)
     }
 
-    /// Called when the data task receives a response.
-    ///
-    /// - Parameters:
-    ///   - session: The URLSession.
-    ///   - dataTask: The URLSessionDataTask.
-    ///   - response: The received response.
-    ///   - completionHandler: The completion handler to call with the response disposition.
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse, completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
         completionHandler(.allow)
     }
