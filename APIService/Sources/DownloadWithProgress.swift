@@ -172,8 +172,7 @@ public class DownloadTaskSubscription<SubscriberType: Subscriber>: NSObject, Sub
                 try FileManager.default.moveItem(atPath: location.path, toPath: fileUrl.path)
                 _ = self?.subscriber?.receive((url: fileUrl, progress: 1.0))
                 self?.subscriber?.receive(completion: .finished)
-            }
-            catch {
+            } catch {
                 self?.subscriber?.receive(completion: .failure(URLError(.cannotCreateFile)))
             }
         }

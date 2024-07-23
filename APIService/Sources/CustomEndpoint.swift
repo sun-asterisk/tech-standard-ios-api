@@ -74,13 +74,13 @@ public struct CustomEndpoint: Endpoint {
 
 /// Represents options for overriding properties of an endpoint.
 public enum OverrideOptions {
-    case base(String)
-    case path(String)
-    case urlString(String)
+    case base(String?)
+    case path(String?)
+    case urlString(String?)
     case httpMethod(HttpMethod)
-    case headers([String: Any])
-    case queryItems([String: Any])
-    case body([String: Any])
+    case headers([String: Any]?)
+    case queryItems([String: Any]?)
+    case body([String: Any]?)
 }
 
 public extension Endpoint {
@@ -210,5 +210,43 @@ public extension Endpoint {
     /// - Returns: A new endpoint with the query items added.
     func add(queryItems: (Self) -> [String: Any]) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .queryItems(queryItems(self)))
+    }
+}
+
+// MARK: - Helpers
+public extension Endpoint {
+    func add(username: String, password: String) -> Endpoint {
+        let loginString = "\(username):\(password)"
+        
+        guard let loginData = loginString.data(using: .utf8) else {
+            return self
+        }
+        
+        let base64LoginString = loginData.base64EncodedString()
+        
+        return add(additionalHeaders: [
+            "Authorization": "Basic \(base64LoginString)"
+        ])
+    }
+    
+    func add(etag: String) -> Endpoint {
+        add(additionalHeaders: [
+            "Etag": etag
+        ])
+    }
+}
+
+// MARK: - BaseEndpoint
+public extension CustomEndpoint {
+    func baseEndpoint() -> BaseEndpoint {
+        BaseEndpoint(
+            base: base,
+            path: path, 
+            urlString: urlString,
+            httpMethod: httpMethod,
+            headers: headers,
+            queryItems: queryItems,
+            body: body
+        )
     }
 }

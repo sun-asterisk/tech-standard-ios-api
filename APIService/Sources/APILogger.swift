@@ -127,3 +127,8 @@ public class CompactLogger: APILogger {
         os_log("%{PUBLIC}@", log: .default, type: .info, logString)
     }
 }
+
+public enum APILoggers {
+    public static var compact: APILogger { CompactLogger.shared }
+    public static var verbose: APILogger { VerboseLogger.shared }
+}

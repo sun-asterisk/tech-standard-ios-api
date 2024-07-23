@@ -21,7 +21,7 @@ final class RepoGateway: RepoGatewayProtocol {
     }
     
     func getRepos(page: Int, perPage: Int) -> AnyPublisher<[Repo], Error> {
-        GitEndpoint.repos(page: page, perPage: perPage)
+        BaseEndpoint.gitRepos
             .add(headers: { ep in
                 let device = "iOS"
                 
@@ -36,18 +36,28 @@ final class RepoGateway: RepoGatewayProtocol {
             .publisher
             .addToken(manager: TokenManager.shared)
             .map { $0.add(httpMethod: .get) }
-            .map { ep in
-                DefaultAPIService.shared
+            .flatMap { ep in
+                APIServices.default
                     .request(ep, decodingType: GetReposResult.self)
             }
-            .switchToLatest()
             .map(\.items)
             .eraseToAnyPublisher()
     }
     
     func getEvents(url: String, page: Int, perPage: Int) -> AnyPublisher<[Event], Error> {
-        DefaultAPIService.shared
-            .request(GitEndpoint.events(url: url, page: page, perPage: perPage), decodingType: [Event].self)
+//        DefaultAPIService.shared
+//            .request(GitEndpoint.events(url: url, page: page, perPage: perPage), decodingType: [Event].self)
+//            .eraseToAnyPublisher()
+        APIServices.default
+            .request(
+                BaseEndpoint()
+                    .add(urlString: url)
+                    .add(queryItems: [
+                        "per_page": perPage,
+                        "page": page
+                    ])
+            )
+            .data(type: [Event].self)
             .eraseToAnyPublisher()
     }
 }

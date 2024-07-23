@@ -62,3 +62,15 @@ extension GitEndpoint: Endpoint {
     }
 }
 
+extension BaseEndpoint {
+    static let gitBase = BaseEndpoint(base: "https://api.github.com")
+    
+    static let gitRepos = gitBase
+        .add(path: "/search/repositories")
+        .add(queryItems: [
+            "q": "language:swift",
+            "per_page": 10,
+            "page": 1
+        ])
+}
+

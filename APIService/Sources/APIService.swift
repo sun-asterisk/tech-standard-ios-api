@@ -11,7 +11,7 @@ public protocol APIService: AnyObject {
 }
 
 public extension APIService {
-    var logger: APILogger? { CompactLogger.shared }
+    var logger: APILogger? { APILoggers.compact }
 }
 
 /// An enumeration representing possible errors that can occur during API requests.
@@ -87,6 +87,13 @@ public extension AnyPublisher where Output == URLSession.DataTaskPublisher.Outpu
         map { _ in () }
             .eraseToAnyPublisher()
     }
+    
+    func json() -> AnyPublisher<[String: Any], Error> {
+        tryMap {
+            try JSONSerialization.jsonObject(with: $0.data, options: []) as! [String: Any]
+        }
+        .eraseToAnyPublisher()
+    }
 }
 
 public extension APIService {
@@ -150,5 +157,9 @@ public extension APIService {
             .mapError { $0 as Error }
             .eraseToAnyPublisher()
     }
+}
+
+public enum APIServices {
+    public static var `default`: APIService { DefaultAPIService.shared }
 }
 
