@@ -28,7 +28,7 @@ struct DownloadImageView: View {
             }
             Button("Start Downloads") {
                 let urls = [
-                    URL(string: "https://file-examples.com/storage/fe9f6f893066954d9aac3a2/2017/04/file_example_MP4_640_3MG.mp4")!
+                    URL(string: "https://file-examples.com/storage/feafe17b26669f6919cc6cc/2017/04/file_example_MP4_480_1_5MG.mp4")!
                 ]
                 viewModel.startDownload(urls: urls)
             }
@@ -49,22 +49,22 @@ class ViewModel: ObservableObject {
 
     func startDownload(urls: [URL]) {
         for url in urls {
-//            apiService.downloadWithProgress(DownloadFileEndpoint.image(url: url.absoluteString))
-//                .sink(receiveCompletion: { completion in
-//                    switch completion {
-//                    case .finished:
-//                        print("Download finished for \(url)")
-//                    case .failure(let error):
-//                        print("Download failed for \(url): \(error)")
-//                    }
-//                }, receiveValue: { [weak self] fileURL, progress in
-//                    self?.progressDict[url] = (progress, nil)
-//                    
-//                    if let fileURL {
-//                        print("File downloaded", fileURL)
-//                    }
-//                })
-//                .store(in: &cancellables)
+            apiService.downloadWithProgress(DownloadFileEndpoint.image(url: url.absoluteString))
+                .sink(receiveCompletion: { completion in
+                    switch completion {
+                    case .finished:
+                        print("Download finished for \(url)")
+                    case .failure(let error):
+                        print("Download failed for \(url): \(error)")
+                    }
+                }, receiveValue: { [weak self] fileURL, progress in
+                    self?.progressDict[url] = (progress, nil)
+                    
+                    if let fileURL {
+                        print("File downloaded", fileURL)
+                    }
+                })
+                .store(in: &cancellables)
             
 //            apiService.download(DownloadFileEndpoint.image(url: url.absoluteString))
 //                .sink(receiveCompletion: { completion in
@@ -78,19 +78,6 @@ class ViewModel: ObservableObject {
 //                    print("File downloaded", fileURL)
 //                })
 //                .store(in: &cancellables)
-            
-            apiService.requestData(DownloadFileEndpoint.image(url: url.absoluteString))
-                .sink(receiveCompletion: { completion in
-                    switch completion {
-                    case .finished:
-                        print("Download finished for \(url)")
-                    case .failure(let error):
-                        print("Download failed for \(url): \(error)")
-                    }
-                }, receiveValue: { data in
-                    print("File downloaded")
-                })
-                .store(in: &cancellables)
             
 //            apiService.requestDataWithProgress(DownloadFileEndpoint.image(url: url.absoluteString))
 //                .sink(receiveCompletion: { completion in

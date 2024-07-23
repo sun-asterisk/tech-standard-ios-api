@@ -21,6 +21,75 @@ public enum APIError: Error {
 }
 
 public extension APIService {
+    /// Performs a network request and returns the raw response and data.
+    ///
+    /// - Parameters:
+    ///   - endpoint: The endpoint to request.
+    ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
+    /// - Returns: A publisher that emits a tuple containing the URLResponse and the response Data, or an error.
+    func request(
+        _ endpoint: Endpoint,
+        queue: DispatchQueue = .main
+    ) -> AnyPublisher<URLSession.DataTaskPublisher.Output, Error>  {
+        guard let urlRequest = endpoint.urlRequest else {
+            return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
+        }
+        
+        logger?.logRequest(urlRequest)
+        
+        return session.dataTaskPublisher(for: urlRequest)
+            .tryMap { [weak self] output in
+                self?.logger?.logResponse(output.response, data: output.data)
+                
+                guard let httpResponse = output.response as? HTTPURLResponse else {
+                    throw URLError(.badServerResponse)
+                }
+                
+                guard 200..<300 ~= httpResponse.statusCode else {
+                    throw APIError.badRequest(response: httpResponse, data: output.data)
+                }
+                
+                return output
+            }
+            .receive(on: queue)
+            .eraseToAnyPublisher()
+    }
+}
+
+public extension AnyPublisher where Output == URLSession.DataTaskPublisher.Output, Failure == Error {
+    /// Transforms the publisher to decode the data into a specified type.
+    ///
+    /// - Parameters:
+    ///   - type: The type to decode the data into.
+    ///   - decoder: The decoder to use for decoding the data. Defaults to `JSONDecoder`.
+    /// - Returns: A publisher that emits the decoded type or an error.
+    func data<T, Decoder>(
+        type: T.Type,
+        decoder: Decoder = JSONDecoder()
+    ) -> AnyPublisher<T, Error> where T: Decodable, Decoder: TopLevelDecoder, Decoder.Input == Data {
+        map { $0.data }
+            .decode(type: T.self, decoder: decoder)
+            .eraseToAnyPublisher()
+    }
+    
+    /// Transforms the publisher to emit only the raw data.
+    ///
+    /// - Returns: A publisher that emits the data or an error.
+    func data() -> AnyPublisher<Data, Error> {
+        map { $0.data }
+            .eraseToAnyPublisher()
+    }
+    
+    /// Transforms the publisher to emit a `Void` value, effectively ignoring the data.
+    ///
+    /// - Returns: A publisher that emits `Void` or an error.
+    func plain() -> AnyPublisher<Void, Error> {
+        map { _ in () }
+            .eraseToAnyPublisher()
+    }
+}
+
+public extension APIService {
     
     /// Performs a network request and decodes the response data into a specified type.
     ///
@@ -29,75 +98,15 @@ public extension APIService {
     ///   - decodingType: The type to decode the response data into.
     ///   - decoder: The decoder to use for decoding the response data. Default is `JSONDecoder()`.
     ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
-    ///   - retries: The number of times to retry the request in case of failure. Default is 0.
     /// - Returns: A publisher that emits the decoded response data or an error.
     func request<T, Decoder>(
         _ endpoint: Endpoint,
         decodingType: T.Type,
         decoder: Decoder = JSONDecoder(),
-        queue: DispatchQueue = .main,
-        retries: Int = 0
+        queue: DispatchQueue = .main
     ) -> AnyPublisher<T, Error> where T: Decodable, Decoder: TopLevelDecoder, Decoder.Input == Data {
-        guard let urlRequest = endpoint.urlRequest else {
-            return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
-        }
-        
-        logger?.logRequest(urlRequest)
-        
-        return session.dataTaskPublisher(for: urlRequest)
-            .tryMap { [weak self] output in
-                self?.logger?.logResponse(output.response, data: output.data)
-                
-                guard let httpResponse = output.response as? HTTPURLResponse else {
-                    throw URLError(.badServerResponse)
-                }
-                
-                guard 200..<300 ~= httpResponse.statusCode else {
-                    throw APIError.badRequest(response: httpResponse, data: output.data)
-                }
-                
-                return output.data
-            }
-            .decode(type: T.self, decoder: decoder)
-            .receive(on: queue)
-            .retry(retries)
-            .eraseToAnyPublisher()
-    }
-    
-    /// Performs a network request and returns the raw response and data.
-    ///
-    /// - Parameters:
-    ///   - endpoint: The endpoint to request.
-    ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
-    ///   - retries: The number of times to retry the request in case of failure. Default is 0.
-    /// - Returns: A publisher that emits a tuple containing the URLResponse and the response Data, or an error.
-    func request(
-        _ endpoint: Endpoint,
-        queue: DispatchQueue = .main,
-        retries: Int = 0
-    ) -> AnyPublisher<(URLResponse, Data), Error>  {
-        guard let urlRequest = endpoint.urlRequest else {
-            return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
-        }
-        
-        logger?.logRequest(urlRequest)
-        
-        return session.dataTaskPublisher(for: urlRequest)
-            .tryMap { [weak self] output in
-                self?.logger?.logResponse(output.response, data: output.data)
-                
-                guard let httpResponse = output.response as? HTTPURLResponse else {
-                    throw URLError(.badServerResponse)
-                }
-                
-                guard 200..<300 ~= httpResponse.statusCode else {
-                    throw APIError.badRequest(response: httpResponse, data: output.data)
-                }
-                
-                return (output.response, output.data)
-            }
-            .receive(on: queue)
-            .retry(retries)
+        request(endpoint, queue: queue)
+            .data(type: decodingType, decoder: decoder)
             .eraseToAnyPublisher()
     }
     
@@ -106,59 +115,13 @@ public extension APIService {
     /// - Parameters:
     ///   - endpoint: The endpoint to request.
     ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
-    ///   - retries: The number of times to retry the request in case of failure. Default is 0.
     /// - Returns: A publisher that emits `Void` if the request succeeds or an error if it fails.
     func requestPlain(
         _ endpoint: Endpoint,
-        queue: DispatchQueue = .main,
-        retries: Int = 0
-    ) -> AnyPublisher<Void, Error> {
-        guard let urlRequest = endpoint.urlRequest else {
-            return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
-        }
-        
-        logger?.logRequest(urlRequest)
-        
-        return session.dataTaskPublisher(for: urlRequest)
-            .tryMap { [weak self] output -> Void in
-                self?.logger?.logResponse(output.response, data: nil)
-                
-                guard let httpResponse = output.response as? HTTPURLResponse else {
-                    throw URLError(.badServerResponse)
-                }
-                
-                guard 200..<300 ~= httpResponse.statusCode else {
-                    throw APIError.badRequest(response: httpResponse, data: output.data)
-                }
-            }
-            .receive(on: queue)
-            .retry(retries)
-            .eraseToAnyPublisher()
-    }
-    
-    /// Performs a network request and returns the response data.
-    ///
-    /// - Parameters:
-    ///   - endpoint: The endpoint to request.
-    ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
-    /// - Returns: A publisher that emits the response data or a URL error.
-    func requestData(
-        _ endpoint: Endpoint,
         queue: DispatchQueue = .main
-    ) -> AnyPublisher<Data, Error> {
-        guard let urlRequest = endpoint.urlRequest else {
-            return Fail(error: URLError(.badURL)).eraseToAnyPublisher()
-        }
-        
-        logger?.logRequest(urlRequest)
-        
-        return session.dataTaskPublisher(for: urlRequest)
-            .handleEvents(receiveOutput: { [weak self] output in
-                self?.logger?.logResponse(output.response, data: nil)
-            })
-            .map { $0.data }
-            .receive(on: queue)
-            .mapError { $0 as Error }
+    ) -> AnyPublisher<Void, Error> {
+        request(endpoint, queue: queue)
+            .plain()
             .eraseToAnyPublisher()
     }
     
@@ -188,3 +151,4 @@ public extension APIService {
             .eraseToAnyPublisher()
     }
 }
+

@@ -58,3 +58,41 @@ extension Container {
     }
 }
 
+// Example
+class MyAPIService: APIService {
+    var session: URLSession = URLSession.shared
+    
+    func requestData(
+        _ endpoint: Endpoint,
+        queue: DispatchQueue = .main
+    ) -> AnyPublisher<URLSession.DataTaskPublisher.Output, Error> {
+        self.request(endpoint, queue: queue)
+            // .handleError()
+            .eraseToAnyPublisher()
+    }
+    
+    func requestDataWithToken(
+        _ endpoint: Endpoint,
+        queue: DispatchQueue = .main
+    ) -> AnyPublisher<URLSession.DataTaskPublisher.Output, Error> {
+        GitEndpoint.repos(page: 1, perPage: 10)
+            .publisher
+            .addToken(manager: TokenManager.shared)
+            .flatMap { [unowned self] ep in
+                self.request(endpoint, queue: queue)
+            }
+            // .handleError()
+            .eraseToAnyPublisher()
+    }
+    
+    func requestPlain(_ endpoint: Endpoint) -> AnyPublisher<Void, Error> {
+        requestData(endpoint)
+            .plain()
+    }
+    
+    func getEvents(_ endpoint: Endpoint) -> AnyPublisher<[Event], Error> {
+        requestData(endpoint)
+            .data(type: [Event].self)
+            .eraseToAnyPublisher()
+    }
+}
