@@ -16,12 +16,75 @@ public protocol APILogger: AnyObject {
     func logResponse(_ response: URLResponse?, data: Data?)
 }
 
+public class IntermediateLogger: APILogger {
+    public static let shared = IntermediateLogger()
+    
+    /// Optional prefix to add to log messages.
+    public var prefix: String? = "[API]"
+    
+    public var prettyPrinted = false
+    public var maxLength = 500
+    
+    /// Logs detailed information about a URLRequest, including headers and body.
+    ///
+    /// - Parameter urlRequest: The URLRequest to log.
+    public func logRequest(_ urlRequest: URLRequest) {
+        let method = urlRequest.httpMethod ?? "UNKNOWN"
+        let urlString = urlRequest.url?.absoluteString ?? ""
+        var logString = method + " " + urlString
+        
+        if let headers = urlRequest.allHTTPHeaderFields, 
+            !headers.isEmpty,
+            let headersString = headers.toJSONString(prettyPrinted: prettyPrinted) {
+            logString += "\n" + headersString
+        }
+        
+        if let bodyData = urlRequest.httpBody, let bodyString = bodyData.toJSONString(prettyPrinted: prettyPrinted) {
+            logString += "\n\(bodyString)"
+        }
+        
+        if let prefix {
+            logString = prefix + " " + logString
+        }
+        
+        os_log("%{PUBLIC}@", log: .default, type: .info, logString)
+    }
+    
+    /// Logs detailed information about a URLResponse, including status code, headers, and body.
+    ///
+    /// - Parameters:
+    ///   - response: The URLResponse to log.
+    ///   - data: The data associated with the response, if any.
+    public func logResponse(_ response: URLResponse?, data: Data?) {
+        var logString = ""
+        
+        if let httpResponse = response as? HTTPURLResponse {
+            logString += "\(httpResponse.statusCode) " + (httpResponse.url?.absoluteString ?? "")
+        } else {
+            logString += "Bad Response"
+        }
+        
+        if let data {
+            logString += "\n\(data.toJSONString(prettyPrinted: prettyPrinted, maxLength: maxLength) ?? "Bad Response Data")"
+        }
+        
+        if let prefix {
+            logString = prefix + " " + logString
+        }
+        
+        os_log("%{PUBLIC}@", log: .default, type: .info, logString)
+    }
+}
+
 /// A verbose logger implementation that logs detailed information about API requests and responses.
 public class VerboseLogger: APILogger {
     public static let shared = VerboseLogger()
     
     /// Optional prefix to add to log messages.
     public var prefix: String? = "[API]"
+    
+    public var prettyPrinted = true
+    public var maxLength = 0
     
     /// Logs detailed information about a URLRequest, including headers and body.
     ///
@@ -39,7 +102,7 @@ public class VerboseLogger: APILogger {
             }
         }
         
-        if let bodyData = urlRequest.httpBody, let bodyString = String(data: bodyData, encoding: .utf8) {
+        if let bodyData = urlRequest.httpBody, let bodyString = bodyData.toJSONString(prettyPrinted: prettyPrinted) {
             logString += "\n\(bodyString)"
         }
         
@@ -73,7 +136,7 @@ public class VerboseLogger: APILogger {
         }
         
         if let data {
-            logString += "\n\(String(data: data, encoding: .utf8) ?? "Bad Data")"
+            logString += "\n\(data.toJSONString(prettyPrinted: prettyPrinted, maxLength: maxLength) ?? "Bad Response Data")"
         }
         
         if let prefix {
@@ -129,6 +192,11 @@ public class CompactLogger: APILogger {
 }
 
 public enum APILoggers {
-    public static var compact: APILogger { CompactLogger.shared }
-    public static var verbose: APILogger { VerboseLogger.shared }
+    
+}
+
+public extension APILoggers {
+    static var compact: CompactLogger { CompactLogger.shared }
+    static var intermediate: IntermediateLogger { IntermediateLogger.shared }
+    static var verbose: VerboseLogger { VerboseLogger.shared }
 }

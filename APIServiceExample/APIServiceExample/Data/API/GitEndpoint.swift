@@ -39,7 +39,7 @@ extension GitEndpoint: Endpoint {
     var httpMethod: HttpMethod {
         switch self {
         case .repos:
-            return .post
+            return .get
         case .events:
             return .get
         }
@@ -57,6 +57,18 @@ extension GitEndpoint: Endpoint {
             return [
                 "per_page": perPage,
                 "page": page
+            ]
+        }
+    }
+    
+    var body: [String : Any]? {
+        switch self {
+        case .repos(let page, let perPage):
+            return nil
+        case .events(let url, let page, let perPage):
+            return [
+                "name": "Tuan",
+                "skill": "iOS"
             ]
         }
     }

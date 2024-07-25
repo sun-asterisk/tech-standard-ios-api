@@ -16,7 +16,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         TokenManager.shared.setToken("test token")
-        DefaultAPIService.shared.logger = APILoggers.verbose
+//        DefaultAPIService.shared.logger = APILoggers.intermediate
+//        APILoggers.intermediate.prettyPrinted = true
+//        APILoggers.intermediate.maxLength = 1000
 //        CompactLogger.shared.prefix = nil
         
         return true

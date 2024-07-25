@@ -228,12 +228,6 @@ public extension Endpoint {
             "Authorization": "Basic \(base64LoginString)"
         ])
     }
-    
-    func add(etag: String) -> Endpoint {
-        add(additionalHeaders: [
-            "Etag": etag
-        ])
-    }
 }
 
 // MARK: - BaseEndpoint

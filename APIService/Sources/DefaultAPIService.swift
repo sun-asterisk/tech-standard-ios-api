@@ -23,7 +23,7 @@ public final class DefaultAPIService: APIService, DownloadWithProgress, DataWith
     /// The handler for managing data task events.
     public var dataTaskHandler = DataTaskHandler()
     
-    public var logger: APILogger? = CompactLogger.shared {
+    public var logger: APILogger? = IntermediateLogger.shared {
         didSet {
             dataTaskHandler.logger = logger
             downloadTaskHandler.logger = logger
@@ -52,4 +52,8 @@ public final class DefaultAPIService: APIService, DownloadWithProgress, DataWith
         let dataConfiguration = downloadConfiguration.copy() as! URLSessionConfiguration
         self.dataSession = URLSession(configuration: dataConfiguration, delegate: dataTaskHandler, delegateQueue: nil)
     }
+}
+
+public extension APIServices {
+    static var `default`: DefaultAPIService { DefaultAPIService.shared }
 }

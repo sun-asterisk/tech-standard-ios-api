@@ -160,6 +160,6 @@ public extension APIService {
 }
 
 public enum APIServices {
-    public static var `default`: APIService { DefaultAPIService.shared }
+    
 }
 
