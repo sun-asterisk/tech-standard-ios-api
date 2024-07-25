@@ -47,12 +47,7 @@ final class RepoGateway: RepoGatewayProtocol {
     func getEvents(url: String, page: Int, perPage: Int) -> AnyPublisher<[Event], Error> {
         APIServices.default
             .request(
-                BaseEndpoint()
-                    .add(urlString: url)
-                    .add(queryItems: [
-                        "per_page": perPage,
-                        "page": page
-                    ])
+                GitEndpoint.repos(page: page, perPage: perPage)
             )
             .data(type: [Event].self)
             .eraseToAnyPublisher()

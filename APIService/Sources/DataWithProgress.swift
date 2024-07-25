@@ -25,7 +25,7 @@ public extension APIService where Self: DataWithProgress {
     ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
     /// - Returns: A publisher that emits a tuple containing optional data and progress or an error.
     func requestDataWithProgress(
-        _ endpoint: Endpoint,
+        _ endpoint: URLRequestConvertible,
         queue: DispatchQueue = .main
     ) -> AnyPublisher<(data: Data?, progress: Double?), Error> {
         guard let urlRequest = endpoint.urlRequest else {

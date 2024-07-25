@@ -88,7 +88,7 @@ public extension Endpoint {
     ///
     /// - Parameter base: The base URL to add.
     /// - Returns: A new endpoint with the base URL added.
-    func add(base: String) -> Endpoint {
+    func add(base: String?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .base(base))
     }
 
@@ -96,7 +96,7 @@ public extension Endpoint {
     ///
     /// - Parameter base: A closure that returns the base URL to add.
     /// - Returns: A new endpoint with the base URL added.
-    func add(base: (Self) -> String) -> Endpoint {
+    func add(base: (Self) -> String?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .base(base(self)))
     }
 
@@ -104,7 +104,7 @@ public extension Endpoint {
     ///
     /// - Parameter path: The path to add.
     /// - Returns: A new endpoint with the path added.
-    func add(path: String) -> Endpoint {
+    func add(path: String?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .path(path))
     }
 
@@ -112,7 +112,7 @@ public extension Endpoint {
     ///
     /// - Parameter path: A closure that returns the path to add.
     /// - Returns: A new endpoint with the path added.
-    func add(path: (Self) -> String) -> Endpoint {
+    func add(path: (Self) -> String?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .path(path(self)))
     }
 
@@ -120,7 +120,7 @@ public extension Endpoint {
     ///
     /// - Parameter urlString: The URL string to add.
     /// - Returns: A new endpoint with the URL string added.
-    func add(urlString: String) -> Endpoint {
+    func add(urlString: String?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .urlString(urlString))
     }
 
@@ -128,7 +128,7 @@ public extension Endpoint {
     ///
     /// - Parameter urlString: A closure that returns the URL string to add.
     /// - Returns: A new endpoint with the URL string added.
-    func add(urlString: (Self) -> String) -> Endpoint {
+    func add(urlString: (Self) -> String?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .urlString(urlString(self)))
     }
     
@@ -152,7 +152,7 @@ public extension Endpoint {
     ///
     /// - Parameter headers: The headers to add.
     /// - Returns: A new endpoint with the headers added.
-    func add(headers: [String: Any]) -> Endpoint {
+    func add(headers: [String: Any]?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .headers(headers))
     }
 
@@ -160,7 +160,7 @@ public extension Endpoint {
     ///
     /// - Parameter headers: A closure that returns the headers to add.
     /// - Returns: A new endpoint with the headers added.
-    func add(headers: (Self) -> [String: Any]) -> Endpoint {
+    func add(headers: (Self) -> [String: Any]?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .headers(headers(self)))
     }
 
@@ -200,7 +200,7 @@ public extension Endpoint {
     ///
     /// - Parameter queryItems: The query items to add.
     /// - Returns: A new endpoint with the query items added.
-    func add(queryItems: [String: Any]) -> Endpoint {
+    func add(queryItems: [String: Any]?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .queryItems(queryItems))
     }
 
@@ -208,7 +208,7 @@ public extension Endpoint {
     ///
     /// - Parameter queryItems: A closure that returns the query items to add.
     /// - Returns: A new endpoint with the query items added.
-    func add(queryItems: (Self) -> [String: Any]) -> Endpoint {
+    func add(queryItems: (Self) -> [String: Any]?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .queryItems(queryItems(self)))
     }
 }

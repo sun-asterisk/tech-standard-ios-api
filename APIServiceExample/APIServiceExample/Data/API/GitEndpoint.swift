@@ -41,7 +41,7 @@ extension GitEndpoint: Endpoint {
         case .repos:
             return .get
         case .events:
-            return .get
+            return .post
         }
     }
     
@@ -71,6 +71,10 @@ extension GitEndpoint: Endpoint {
                 "skill": "iOS"
             ]
         }
+    }
+    
+    var urlRequest: URLRequest? {
+        URLRequest(url: URL(string: "https://google.com")!)
     }
 }
 

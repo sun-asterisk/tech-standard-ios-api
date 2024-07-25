@@ -28,7 +28,7 @@ public extension APIService {
     ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
     /// - Returns: A publisher that emits a tuple containing the URLResponse and the response Data, or an error.
     func request(
-        _ endpoint: Endpoint,
+        _ endpoint: URLRequestConvertible,
         queue: DispatchQueue = .main
     ) -> AnyPublisher<URLSession.DataTaskPublisher.Output, Error>  {
         guard let urlRequest = endpoint.urlRequest else {
@@ -107,7 +107,7 @@ public extension APIService {
     ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
     /// - Returns: A publisher that emits the decoded response data or an error.
     func request<T, Decoder>(
-        _ endpoint: Endpoint,
+        _ endpoint: URLRequestConvertible,
         decodingType: T.Type,
         decoder: Decoder = JSONDecoder(),
         queue: DispatchQueue = .main
@@ -124,7 +124,7 @@ public extension APIService {
     ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
     /// - Returns: A publisher that emits `Void` if the request succeeds or an error if it fails.
     func requestPlain(
-        _ endpoint: Endpoint,
+        _ endpoint: URLRequestConvertible,
         queue: DispatchQueue = .main
     ) -> AnyPublisher<Void, Error> {
         request(endpoint, queue: queue)
@@ -139,7 +139,7 @@ public extension APIService {
     ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
     /// - Returns: A publisher that emits the file URL or a URL error.
     func download(
-        _ endpoint: Endpoint,
+        _ endpoint: URLRequestConvertible,
         queue: DispatchQueue = .main
     ) -> AnyPublisher<URL, Error> {
         guard let urlRequest = endpoint.urlRequest else {

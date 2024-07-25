@@ -75,3 +75,7 @@ public extension Endpoint {
         return request
     }
 }
+
+extension URLRequest: URLRequestConvertible {
+    public var urlRequest: URLRequest? { self }
+}
