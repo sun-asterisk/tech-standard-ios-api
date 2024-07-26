@@ -113,6 +113,27 @@ extension GitEndpoint: Endpoint {
 }
 ```
 
+### Using CustomEndpoint
+
+You can customize your endpoints using CustomEndpoint for more flexibility.
+
+```swift
+let baseEndpoint = BaseEndpoint(base: "https://api.example.com", path: "/v1/resource")
+let customEndpoint = CustomEndpoint(endpoint: baseEndpoint, overrides: .headers(["Authorization": "Bearer token"]))
+```
+
+You can also use the extension methods provided by Endpoint to add properties:
+
+```swift
+let customizedEndpoint = baseEndpoint
+    .add(base: "https://api.newexample.com")
+    .add(path: "/v1/newresource")
+    .add(httpMethod: .post)
+    .add(headers: ["Custom-Header": "Value"])
+    .add(queryItems: ["key": "value"])
+    .add(body: ["param": "value"])
+```
+
 ### Using Endpoint Convertible Types
 
 You can create requests using `String`, `URL`, or `URLRequest` by converting them to an `Endpoint` using `toEndpoint()`.
@@ -325,7 +346,7 @@ let cancellable = apiService.request(endpoint)
 For download and data tasks with progress tracking, you can use `DownloadWithProgress` and `DataWithProgress` protocols provided by `DefaultAPIService`.
 
 ```swift
-let downloadService = DefaultAPIService.shared
+let downloadService = APIServices.default
 let downloadEndpoint = BaseEndpoint(urlString: "https://example.com/largefile.zip")
 
 let downloadCancellable = downloadService.downloadWithProgress(downloadEndpoint)
@@ -345,7 +366,7 @@ let downloadCancellable = downloadService.downloadWithProgress(downloadEndpoint)
         }
     })
 
-let dataService = DefaultAPIService.shared
+let dataService = APIServices.default
 let dataEndpoint = BaseEndpoint(urlString: "https://api.example.com/v1/resource")
 
 let dataCancellable = dataService.requestDataWithProgress(dataEndpoint)
@@ -374,6 +395,10 @@ You can configure different logging levels by setting the `logger` property of `
 let apiService = APIServices.default
 apiService.logger = APILoggers.verbose // Set to desired logger
 ```
+
+#### Implementing Custom Loggers
+
+You can create your own custom logger by conforming to the `APILogger` protocol. This allows you to define custom logging behavior for API requests and responses.
 
 ## License
 
