@@ -1,10 +1,5 @@
 import Foundation
 
-/// Protocol that defines a type that can be converted to a URLRequest.
-public protocol URLRequestConvertible {
-    var urlRequest: URLRequest? { get }
-}
-
 /// Enumeration of HTTP methods.
 public enum HttpMethod: String {
     case get = "GET"
@@ -12,6 +7,8 @@ public enum HttpMethod: String {
     case put = "PUT"
     case delete = "DELETE"
     case patch = "PATCH"
+    case head = "HEAD"
+    case options = "OPTIONS"
 }
 
 /// Protocol that defines the properties of an endpoint.
@@ -74,8 +71,4 @@ public extension Endpoint {
         
         return request
     }
-}
-
-extension URLRequest: URLRequestConvertible {
-    public var urlRequest: URLRequest? { self }
 }

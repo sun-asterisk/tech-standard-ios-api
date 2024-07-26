@@ -9,20 +9,19 @@ public final class DefaultAPIService: APIService, DownloadWithProgress, DataWith
     /// The URLSession used for general network requests.
     public let session: URLSession
     
-    // DownloadWithProgress
     /// The URLSession used for download tasks with progress.
     public var downloadSession: URLSession
     
     /// The handler for managing download task events.
     public var downloadTaskHandler = DownloadTaskHandler()
     
-    // DataWithProgress
     /// The URLSession used for data tasks with progress.
     public var dataSession: URLSession
     
     /// The handler for managing data task events.
     public var dataTaskHandler = DataTaskHandler()
     
+    /// The logger used for logging API requests and responses.
     public var logger: APILogger? = IntermediateLogger.shared {
         didSet {
             dataTaskHandler.logger = logger
@@ -52,8 +51,4 @@ public final class DefaultAPIService: APIService, DownloadWithProgress, DataWith
         let dataConfiguration = downloadConfiguration.copy() as! URLSessionConfiguration
         self.dataSession = URLSession(configuration: dataConfiguration, delegate: dataTaskHandler, delegateQueue: nil)
     }
-}
-
-public extension APIServices {
-    static var `default`: DefaultAPIService { DefaultAPIService.shared }
 }

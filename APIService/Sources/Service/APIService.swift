@@ -88,50 +88,17 @@ public extension AnyPublisher where Output == URLSession.DataTaskPublisher.Outpu
             .eraseToAnyPublisher()
     }
     
-    func json() -> AnyPublisher<[String: Any], Error> {
-        tryMap {
-            try JSONSerialization.jsonObject(with: $0.data, options: []) as! [String: Any]
-        }
-        .eraseToAnyPublisher()
+    func json() -> AnyPublisher<[String: Any]?, Error> {
+        self.map { $0.data }
+            .map { data in
+                guard JSONSerialization.isValidJSONObject(data) else { return nil }
+                return try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+            }
+            .eraseToAnyPublisher()
     }
 }
 
 public extension APIService {
-    
-    /// Performs a network request and decodes the response data into a specified type.
-    ///
-    /// - Parameters:
-    ///   - endpoint: The endpoint to request.
-    ///   - decodingType: The type to decode the response data into.
-    ///   - decoder: The decoder to use for decoding the response data. Default is `JSONDecoder()`.
-    ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
-    /// - Returns: A publisher that emits the decoded response data or an error.
-    func request<T, Decoder>(
-        _ endpoint: URLRequestConvertible,
-        decodingType: T.Type,
-        decoder: Decoder = JSONDecoder(),
-        queue: DispatchQueue = .main
-    ) -> AnyPublisher<T, Error> where T: Decodable, Decoder: TopLevelDecoder, Decoder.Input == Data {
-        request(endpoint, queue: queue)
-            .data(type: decodingType, decoder: decoder)
-            .eraseToAnyPublisher()
-    }
-    
-    /// Performs a network request without expecting any response data.
-    ///
-    /// - Parameters:
-    ///   - endpoint: The endpoint to request.
-    ///   - queue: The dispatch queue to receive the response on. Default is `.main`.
-    /// - Returns: A publisher that emits `Void` if the request succeeds or an error if it fails.
-    func requestPlain(
-        _ endpoint: URLRequestConvertible,
-        queue: DispatchQueue = .main
-    ) -> AnyPublisher<Void, Error> {
-        request(endpoint, queue: queue)
-            .plain()
-            .eraseToAnyPublisher()
-    }
-    
     /// Performs a network request to download a file and returns the file URL.
     ///
     /// - Parameters:
@@ -157,9 +124,5 @@ public extension APIService {
             .mapError { $0 as Error }
             .eraseToAnyPublisher()
     }
-}
-
-public enum APIServices {
-    
 }
 

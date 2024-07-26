@@ -38,7 +38,8 @@ final class RepoGateway: RepoGatewayProtocol {
             .map { $0.add(httpMethod: .get) }
             .flatMap { ep in
                 APIServices.default
-                    .request(ep, decodingType: GetReposResult.self)
+                    .request(ep)
+                    .data(type: GetReposResult.self)
             }
             .map(\.items)
             .eraseToAnyPublisher()
@@ -46,9 +47,11 @@ final class RepoGateway: RepoGatewayProtocol {
     
     func getEvents(url: String, page: Int, perPage: Int) -> AnyPublisher<[Event], Error> {
         APIServices.default
-            .request(
-                GitEndpoint.repos(page: page, perPage: perPage)
-            )
+            .request(url.toEndpoint().add(queryItems: [
+                "per_page": perPage,
+                "page": page
+            ]))
+//            .request(url)
             .data(type: [Event].self)
             .eraseToAnyPublisher()
     }

@@ -84,7 +84,8 @@ extension APIService {
             endpoint.publisher
                 .addToken(manager: TokenManager.shared)
                 .map { ep in
-                    self.request(ep, decodingType: decodingType, decoder: decoder, queue: queue)
+                    self.request(ep, queue: queue)
+                        .data(type: decodingType, decoder: decoder)
                 }
                 .switchToLatest()
                 .eraseToAnyPublisher()

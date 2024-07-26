@@ -215,6 +215,12 @@ public extension Endpoint {
 
 // MARK: - Helpers
 public extension Endpoint {
+    /// Adds Basic Authorization headers to the endpoint.
+    ///
+    /// - Parameters:
+    ///   - username: The username to include in the Basic Authorization.
+    ///   - password: The password to include in the Basic Authorization.
+    /// - Returns: A new endpoint with the Basic Authorization header added.
     func add(username: String, password: String) -> Endpoint {
         let loginString = "\(username):\(password)"
         
@@ -230,12 +236,14 @@ public extension Endpoint {
     }
 }
 
-// MARK: - BaseEndpoint
-public extension CustomEndpoint {
-    func baseEndpoint() -> BaseEndpoint {
+extension CustomEndpoint: EndpointConvertible {
+    /// Converts the current endpoint to a BaseEndpoint instance.
+    ///
+    /// - Returns: A new BaseEndpoint with the properties copied from the current endpoint.
+    public func toEndpoint() -> BaseEndpoint {
         BaseEndpoint(
             base: base,
-            path: path, 
+            path: path,
             urlString: urlString,
             httpMethod: httpMethod,
             headers: headers,
