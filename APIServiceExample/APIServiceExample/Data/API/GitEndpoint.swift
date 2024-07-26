@@ -60,22 +60,6 @@ extension GitEndpoint: Endpoint {
             ]
         }
     }
-    
-    var body: [String : Any]? {
-        switch self {
-        case .repos(let page, let perPage):
-            return nil
-        case .events(let url, let page, let perPage):
-            return [
-                "name": "Tuan",
-                "skill": "iOS"
-            ]
-        }
-    }
-    
-    var urlRequest: URLRequest? {
-        URLRequest(url: URL(string: "https://google.com")!)
-    }
 }
 
 extension BaseEndpoint {

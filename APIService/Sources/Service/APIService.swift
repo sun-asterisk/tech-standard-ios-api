@@ -89,11 +89,7 @@ public extension AnyPublisher where Output == URLSession.DataTaskPublisher.Outpu
     }
     
     func json() -> AnyPublisher<[String: Any]?, Error> {
-        self.map { $0.data }
-            .map { data in
-                guard JSONSerialization.isValidJSONObject(data) else { return nil }
-                return try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
-            }
+        map { $0.data.toJSON() }
             .eraseToAnyPublisher()
     }
 }
