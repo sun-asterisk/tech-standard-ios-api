@@ -81,6 +81,7 @@ public enum OverrideOptions {
     case headers([String: Any]?)
     case queryItems([String: Any]?)
     case body([String: Any]?)
+    case bodyData(Data?)
 }
 
 public extension Endpoint {
@@ -211,6 +212,38 @@ public extension Endpoint {
     func add(queryItems: (Self) -> [String: Any]?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .queryItems(queryItems(self)))
     }
+    
+    /// Adds a body to the endpoint.
+    ///
+    /// - Parameter body: The body to add as a dictionary.
+    /// - Returns: A new endpoint with the body added.
+    func add(body: [String: Any]?) -> Endpoint {
+        CustomEndpoint(endpoint: self, overrides: .body(body))
+    }
+
+    /// Adds a body to the endpoint using a closure.
+    ///
+    /// - Parameter body: A closure that returns the body to add as a dictionary.
+    /// - Returns: A new endpoint with the body added.
+    func add(body: (Self) -> [String: Any]?) -> Endpoint {
+        CustomEndpoint(endpoint: self, overrides: .body(body(self)))
+    }
+
+    /// Adds raw body data to the endpoint.
+    ///
+    /// - Parameter bodyData: The raw body data to add.
+    /// - Returns: A new endpoint with the raw body data added.
+    func add(bodyData: Data?) -> Endpoint {
+        CustomEndpoint(endpoint: self, overrides: .bodyData(bodyData))
+    }
+
+    /// Adds raw body data to the endpoint using a closure.
+    ///
+    /// - Parameter bodyData: A closure that returns the raw body data to add.
+    /// - Returns: A new endpoint with the raw body data added.
+    func add(bodyData: (Self) -> Data?) -> Endpoint {
+        CustomEndpoint(endpoint: self, overrides: .bodyData(bodyData(self)))
+    }
 }
 
 // MARK: - Helpers
@@ -248,7 +281,8 @@ extension CustomEndpoint: EndpointConvertible {
             httpMethod: httpMethod,
             headers: headers,
             queryItems: queryItems,
-            body: body
+            body: body,
+            bodyData: bodyData
         )
     }
 }

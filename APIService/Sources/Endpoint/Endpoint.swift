@@ -20,6 +20,7 @@ public protocol Endpoint: URLRequestConvertible {
     var headers: [String: Any]? { get }
     var queryItems: [String: Any]? { get }
     var body: [String: Any]? { get }
+    var bodyData: Data? { get }
 }
 
 public extension Endpoint {
@@ -30,6 +31,7 @@ public extension Endpoint {
     var headers: [String: Any]? { nil }
     var queryItems: [String: Any]? { nil }
     var body: [String: Any]? { nil }
+    var bodyData: Data? { nil }
 }
 
 public extension Endpoint {
@@ -59,10 +61,13 @@ public extension Endpoint {
         var request = URLRequest(url: url)
         request.httpMethod = httpMethod.rawValue
         
-        if httpMethod != .get,
-           let body,
-           let jsonData = try? JSONSerialization.data(withJSONObject: body, options: .prettyPrinted) {
-            request.httpBody = jsonData
+        if httpMethod != .get {
+            if let bodyData {
+                request.httpBody = bodyData
+            } else if let body,
+                      let jsonData = try? JSONSerialization.data(withJSONObject: body, options: .prettyPrinted) {
+                request.httpBody = jsonData
+            }
         }
         
         headers?

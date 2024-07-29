@@ -9,6 +9,7 @@ public struct BaseEndpoint: Endpoint {
     public var headers: [String: Any]?
     public var queryItems: [String: Any]?
     public var body: [String: Any]?
+    public var bodyData: Data?
     
     /// Initializes a new BaseEndpoint.
     ///
@@ -20,13 +21,16 @@ public struct BaseEndpoint: Endpoint {
     ///   - headers: The headers to include in the request.
     ///   - queryItems: The query items to include in the URL.
     ///   - body: The body parameters to include in the request.
+    ///   - bodyData: The raw body data to include in the request.
     public init(base: String? = nil,
                 path: String? = nil,
                 urlString: String? = nil,
                 httpMethod: HttpMethod = HttpMethod.get,
                 headers: [String : Any]? = nil,
                 queryItems: [String : Any]? = nil,
-                body: [String : Any]? = nil) {
+                body: [String : Any]? = nil,
+                bodyData: Data? = nil
+    ) {
         self.base = base
         self.path = path
         self.urlString = urlString
@@ -34,6 +38,7 @@ public struct BaseEndpoint: Endpoint {
         self.headers = headers
         self.queryItems = queryItems
         self.body = body
+        self.bodyData = bodyData
     }
 }
 
@@ -74,7 +79,8 @@ extension URLRequest: EndpointConvertible {
             httpMethod: HttpMethod(rawValue: self.httpMethod ?? "") ?? .get,
             headers: self.allHTTPHeaderFields,
             queryItems: nil,
-            body: self.httpBody?.toJSON()
+            body: nil,
+            bodyData: self.httpBody
         )
     }
 }

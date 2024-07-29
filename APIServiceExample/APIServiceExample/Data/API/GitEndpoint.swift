@@ -41,7 +41,7 @@ extension GitEndpoint: Endpoint {
         case .repos:
             return .get
         case .events:
-            return .post
+            return .get
         }
     }
     
