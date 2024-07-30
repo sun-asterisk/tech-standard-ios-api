@@ -18,6 +18,9 @@ public struct MultipartFormData {
     public enum Provider: Hashable {
         /// Provides data directly.
         case data(Data)
+        
+        /// Provides data from a file URL.
+        case file(URL)
     }
     
     /// The data provider for the multipart form data.

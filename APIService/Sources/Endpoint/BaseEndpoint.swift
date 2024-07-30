@@ -10,6 +10,7 @@ public struct BaseEndpoint: Endpoint {
     public var queryItems: [String: Any]?
     public var body: [String: Any]?
     public var bodyData: Data?
+    public var parts: [MultipartFormData]
     
     /// Initializes a new BaseEndpoint.
     ///
@@ -22,6 +23,7 @@ public struct BaseEndpoint: Endpoint {
     ///   - queryItems: The query items to include in the URL.
     ///   - body: The body parameters to include in the request.
     ///   - bodyData: The raw body data to include in the request.
+    ///   - parts: The multipart form data parts to include in the request.
     public init(base: String? = nil,
                 path: String? = nil,
                 urlString: String? = nil,
@@ -29,7 +31,8 @@ public struct BaseEndpoint: Endpoint {
                 headers: [String : Any]? = nil,
                 queryItems: [String : Any]? = nil,
                 body: [String : Any]? = nil,
-                bodyData: Data? = nil
+                bodyData: Data? = nil,
+                parts: [MultipartFormData] = []
     ) {
         self.base = base
         self.path = path
@@ -39,6 +42,7 @@ public struct BaseEndpoint: Endpoint {
         self.queryItems = queryItems
         self.body = body
         self.bodyData = bodyData
+        self.parts = parts
     }
 }
 

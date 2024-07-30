@@ -1,4 +1,5 @@
 import Foundation
+import MobileCoreServices
 
 /// Represents a custom endpoint that can override properties of another endpoint.
 public struct CustomEndpoint: Endpoint {
@@ -328,20 +329,36 @@ public extension Endpoint {
         }
 
         for part in self.parts {
-            bodyData.append("--\(boundary)\r\n")
-            
-            if let fileName = part.fileName {
-                bodyData.append("Content-Disposition: form-data; name=\"files\"; filename=\"\(fileName)\"\r\n")
-            } else {
-                bodyData.append("Content-Disposition: form-data; name=\"files\"\r\n\r\n")
-            }
-            
-            if let mimeType = part.mimeType {
-                bodyData.append("Content-Type: \(mimeType)\r\n\r\n")
-            }
-            
-            if case let MultipartFormData.Provider.data(data) = part.provider {
+            switch part.provider {
+            case .data(let data):
+                bodyData.append("--\(boundary)\r\n")
+                
+                if let fileName = part.fileName {
+                    bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"; filename=\"\(fileName)\"\r\n")
+                } else {
+                    bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"\r\n\r\n")
+                }
+                
+                if let mimeType = part.mimeType {
+                    bodyData.append("Content-Type: \(mimeType)\r\n\r\n")
+                }
+                
                 bodyData.append(data)
+            case .file(let url):
+                if let fileData = try? Data(contentsOf: url) {
+                    bodyData.append("--\(boundary)\r\n")
+                    
+                    if let fileName = part.fileName {
+                        bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"; filename=\"\(fileName)\"\r\n")
+                    } else {
+                        bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"\r\n\r\n")
+                    }
+                    
+                    let mimeType = part.mimeType ?? mimeType(for: url)
+                    bodyData.append("Content-Type: \(mimeType)\r\n\r\n")
+                    
+                    bodyData.append(fileData)
+                }
             }
             
             bodyData.append("\r\n")
@@ -349,6 +366,15 @@ public extension Endpoint {
 
         bodyData.append("--\(boundary)--\r\n")
         return self.add(bodyData: bodyData)
+    }
+    
+    private func mimeType(for url: URL) -> String {
+        let pathExtension = url.pathExtension as NSString
+        guard let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension, nil)?.takeRetainedValue(),
+              let mimeType = UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType)?.takeRetainedValue() else {
+            return "application/octet-stream" // default MIME type
+        }
+        return mimeType as String
     }
 }
 
@@ -377,7 +403,7 @@ public extension Endpoint {
         
         let base64LoginString = loginData.base64EncodedString()
         
-        return add(additionalHeaders: [
+        return append(headers: [
             "Authorization": "Basic \(base64LoginString)"
         ])
     }
