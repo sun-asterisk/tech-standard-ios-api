@@ -57,6 +57,14 @@ public struct CustomEndpoint: Endpoint {
         }
         return endpoint.body
     }
+    
+    /// The raw body data of the endpoint.
+    public var bodyData: Data? {
+        if case let .bodyData(value) = overrides {
+            return value
+        }
+        return endpoint.bodyData
+    }
 
     private let endpoint: Endpoint
     private let overrides: OverrideOptions
