@@ -65,6 +65,15 @@ public struct CustomEndpoint: Endpoint {
         }
         return endpoint.bodyData
     }
+    
+    /// The multipart form data parts of the endpoint.
+    /// Returns the overridden parts if set, otherwise returns the parts of the base endpoint.
+    public var parts: [MultipartFormData] {
+        if case let .parts(value) = overrides {
+            return value
+        }
+        return endpoint.parts
+    }
 
     private let endpoint: Endpoint
     private let overrides: OverrideOptions
@@ -90,6 +99,7 @@ public enum OverrideOptions {
     case queryItems([String: Any]?)
     case body([String: Any]?)
     case bodyData(Data?)
+    case parts([MultipartFormData])
 }
 
 public extension Endpoint {
@@ -177,6 +187,7 @@ public extension Endpoint {
     ///
     /// - Parameter additionalHeaders: The headers to merge with existing headers.
     /// - Returns: A new endpoint with the merged headers.
+    @available(*, deprecated, message: "Use append(headers:) instead")
     func add(additionalHeaders: [String: Any]) -> Endpoint {
         let newHeaders: [String: Any]
         
@@ -184,6 +195,22 @@ public extension Endpoint {
             newHeaders = mergeDictionaries(currentHeaders, additionalHeaders)
         } else {
             newHeaders = additionalHeaders
+        }
+        
+        return CustomEndpoint(endpoint: self, overrides: .headers(newHeaders))
+    }
+    
+    /// Appends headers to the existing headers of the endpoint.
+    ///
+    /// - Parameter headers: The headers to append.
+    /// - Returns: A new endpoint with the appended headers.
+    func append(headers: [String: Any]) -> Endpoint {
+        let newHeaders: [String: Any]
+        
+        if let currentHeaders = self.headers {
+            newHeaders = mergeDictionaries(currentHeaders, headers)
+        } else {
+            newHeaders = headers
         }
         
         return CustomEndpoint(endpoint: self, overrides: .headers(newHeaders))
@@ -251,6 +278,85 @@ public extension Endpoint {
     /// - Returns: A new endpoint with the raw body data added.
     func add(bodyData: (Self) -> Data?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .bodyData(bodyData(self)))
+    }
+    
+    /// Adds multipart form data parts to the endpoint.
+    ///
+    /// - Parameter parts: The multipart form data parts to add.
+    /// - Returns: A new endpoint with the multipart form data parts added.
+    func add(parts: [MultipartFormData]) -> Endpoint {
+        CustomEndpoint(endpoint: self, overrides: .parts(parts))
+    }
+
+    /// Adds multipart form data parts to the endpoint using a closure.
+    ///
+    /// - Parameter parts: A closure that returns the multipart form data parts to add.
+    /// - Returns: A new endpoint with the multipart form data parts added.
+    func add(parts: (Self) -> [MultipartFormData]) -> Endpoint {
+        CustomEndpoint(endpoint: self, overrides: .parts(parts(self)))
+    }
+
+    /// Appends multipart form data parts to the existing parts of the endpoint.
+    ///
+    /// - Parameter parts: The multipart form data parts to append.
+    /// - Returns: A new endpoint with the appended multipart form data parts.
+    func append(parts: [MultipartFormData]) -> Endpoint {
+        CustomEndpoint(endpoint: self, overrides: .parts(self.parts + parts))
+    }
+
+    /// Configures the endpoint for a multipart form-data request.
+    ///
+    /// - Parameter boundary: The boundary string for the multipart form-data. Defaults to a UUID string.
+    /// - Returns: A new endpoint configured for multipart form-data with the appropriate headers and body.
+    func multipart(boundary: String = "Boundary-\(UUID().uuidString)") -> Endpoint {
+        let endpoint = append(headers: [
+            "Content-Type": "multipart/form-data; boundary=" + boundary
+        ])
+        
+        return endpoint.addMultipartBody(boundary: boundary)
+    }
+    
+    private func addMultipartBody(boundary: String) -> Endpoint {
+        var bodyData = Data()
+
+        if let parameters = body {
+            for (key, value) in parameters {
+                bodyData.append("--\(boundary)\r\n")
+                bodyData.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n")
+                bodyData.append("\(value)\r\n")
+            }
+        }
+
+        for part in self.parts {
+            bodyData.append("--\(boundary)\r\n")
+            
+            if let fileName = part.fileName {
+                bodyData.append("Content-Disposition: form-data; name=\"files\"; filename=\"\(fileName)\"\r\n")
+            } else {
+                bodyData.append("Content-Disposition: form-data; name=\"files\"\r\n\r\n")
+            }
+            
+            if let mimeType = part.mimeType {
+                bodyData.append("Content-Type: \(mimeType)\r\n\r\n")
+            }
+            
+            if case let MultipartFormData.Provider.data(data) = part.provider {
+                bodyData.append(data)
+            }
+            
+            bodyData.append("\r\n")
+        }
+
+        bodyData.append("--\(boundary)--\r\n")
+        return self.add(bodyData: bodyData)
+    }
+}
+
+extension Data {
+    mutating func append(_ string: String) {
+        if let data = string.data(using: .utf8) {
+            append(data)
+        }
     }
 }
 

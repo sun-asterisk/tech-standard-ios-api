@@ -11,6 +11,42 @@ public enum HttpMethod: String {
     case options = "OPTIONS"
 }
 
+/// A structure representing multipart form data.
+public struct MultipartFormData {
+
+    /// An enumeration representing the data provider for the multipart form data.
+    public enum Provider: Hashable {
+        /// Provides data directly.
+        case data(Data)
+    }
+    
+    /// The data provider for the multipart form data.
+    public let provider: Provider
+
+    /// The name associated with the multipart form data.
+    public let name: String
+    
+    /// The file name for the multipart form data, if any.
+    public let fileName: String?
+
+    /// The MIME type for the multipart form data, if any.
+    public let mimeType: String?
+    
+    /// Initializes a new `MultipartFormData` instance.
+    ///
+    /// - Parameters:
+    ///   - provider: The data provider for the multipart form data.
+    ///   - name: The name associated with the multipart form data.
+    ///   - fileName: The file name for the multipart form data, if any. Defaults to `nil`.
+    ///   - mimeType: The MIME type for the multipart form data, if any. Defaults to `nil`.
+    public init(provider: Provider, name: String, fileName: String? = nil, mimeType: String? = nil) {
+        self.provider = provider
+        self.name = name
+        self.fileName = fileName
+        self.mimeType = mimeType
+    }
+}
+
 /// Protocol that defines the properties of an endpoint.
 public protocol Endpoint: URLRequestConvertible {
     var base: String? { get }
@@ -21,6 +57,7 @@ public protocol Endpoint: URLRequestConvertible {
     var queryItems: [String: Any]? { get }
     var body: [String: Any]? { get }
     var bodyData: Data? { get }
+    var parts: [MultipartFormData] { get }
 }
 
 public extension Endpoint {
@@ -32,6 +69,7 @@ public extension Endpoint {
     var queryItems: [String: Any]? { nil }
     var body: [String: Any]? { nil }
     var bodyData: Data? { nil }
+    var parts: [MultipartFormData] { [] }
 }
 
 public extension Endpoint {

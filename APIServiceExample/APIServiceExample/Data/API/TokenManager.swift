@@ -63,7 +63,7 @@ extension AnyPublisher where Output == Endpoint {
         return self.map { endpoint in
             return manager.validToken()
                 .map { token in
-                    endpoint.add(additionalHeaders: ["access_token": token])
+                    endpoint.append(headers: ["access_token": token])
                 }
         }
         .mapError { $0 as Error }

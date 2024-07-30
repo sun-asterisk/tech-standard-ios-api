@@ -32,7 +32,7 @@ final class RepoGateway: RepoGatewayProtocol {
                 
                 return ["Device": device]
             })
-            .add(additionalHeaders: ["version": 1.5])
+            .append(headers: ["version": 1.5])
             .publisher
             .addToken(manager: TokenManager.shared)
             .map { $0.add(httpMethod: .get) }
@@ -47,7 +47,7 @@ final class RepoGateway: RepoGatewayProtocol {
     
     func getEvents(url: String, page: Int, perPage: Int) -> AnyPublisher<[Event], Error> {
         APIServices.default
-            .request(GitEndpoint.events(url: url, page: page, perPage: perPage))
+            .request(GitEndpoint.events(url: url, page: page, perPage: perPage).multipart())
 //            .request(url.toEndpoint().add(queryItems: [
 //                "per_page": perPage,
 //                "page": page
