@@ -2,60 +2,63 @@ import Combine
 import Foundation
 import APIService
 
+struct Token: Equatable {
+    var accessToken = ""
+    var refreshToken = ""
+    var isExpired = false
+}
+
+enum AppSettings {
+    static var token: Token?
+}
+
 class TokenManager {
     static let shared = TokenManager()
-    weak var delegate: TokenManagerDelegate?
-    
-    private let tokenSubject = CurrentValueSubject<String?, Never>(nil)
     private let semaphore = DispatchSemaphore(value: 1)
     
     private init() {}
+    private var _token: Token?
     
-    func setToken(_ token: String) {
-        tokenSubject.send(token)
+    var token: Token? {
+        get {
+            return _token ?? AppSettings.token
+        }
+        set {
+            guard let token = newValue, token != _token else { return }
+            _token = token
+            AppSettings.token = token
+        }
     }
-
-    func validToken() -> AnyPublisher<String, Error> {
-        return tokenSubject
-            .flatMap { token -> AnyPublisher<String, Error> in
-                guard let token = token else {
-                    return self.refreshToken()
-                }
-                
-                return Just(token).setFailureType(to: Error.self).eraseToAnyPublisher()
-            }
+    
+    func refreshToken() -> AnyPublisher<Token, Error> {
+        Just(Token(accessToken: "a new token", refreshToken: "a new refresh token", isExpired: false))
+            .setFailureType(to: Error.self)
             .eraseToAnyPublisher()
     }
-
-    private func refreshToken() -> AnyPublisher<String, Error> {
-        return Future { [weak self] promise in
-            self?.semaphore.wait()
-            
-            if let token = self?.tokenSubject.value {
-                self?.semaphore.signal()
-                promise(.success(token))
-            } else if let delegate = self?.delegate  {
-                delegate.refreshToken(token: "token") { result in
-                    switch result {
-                    case .success(let newToken):
-                        self?.tokenSubject.send(newToken)
-                        self?.semaphore.signal()
-                        promise(.success(newToken))
-                    case .failure(let error):
-                        self?.semaphore.signal()
-                        promise(.failure(error))
-                    }
+    
+    func validToken() -> AnyPublisher<Token, Error> {
+        Just(token)
+            .setFailureType(to: Error.self)
+            .flatMap { [unowned self] token in
+                semaphore.wait()
+                
+                if let token, !token.isExpired {
+                    return Just(token).setFailureType(to: Error.self)
+                        .eraseToAnyPublisher()
+                } else {
+                    return refreshToken()
+                        .eraseToAnyPublisher()
                 }
-            } else {
-                fatalError("No delegate assigned")
             }
-        }
-        .eraseToAnyPublisher()
+            .handleEvents(receiveOutput: { [unowned self] token in
+                self.token = token
+            }, receiveCompletion: { [unowned self] _ in
+                semaphore.signal()
+            }, receiveCancel: { [unowned self] in
+                semaphore.signal()
+            })
+            .eraseToAnyPublisher()
     }
-}
-
-protocol TokenManagerDelegate: AnyObject {
-    func refreshToken(token: String, completion: (Result<String, Error>) -> Void)
 }
 
 extension AnyPublisher where Output == Endpoint {

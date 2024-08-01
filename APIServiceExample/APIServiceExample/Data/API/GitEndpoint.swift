@@ -39,9 +39,9 @@ extension GitEndpoint: Endpoint {
     var httpMethod: HttpMethod {
         switch self {
         case .repos:
-            return .get
-        case .events:
             return .post
+        case .events:
+            return .get
         }
     }
     
@@ -57,17 +57,6 @@ extension GitEndpoint: Endpoint {
             return [
                 "per_page": perPage,
                 "page": page
-            ]
-        }
-    }
-    
-    var parts: [MultipartFormData] {
-        switch self {
-        case .repos(let page, let perPage):
-            return []
-        case .events(let url, let page, let perPage):
-            return [
-                MultipartFormData(provider: .data(Data()), name: "avatar", fileName: "avatar.png", mimeType: "jpg/image")
             ]
         }
     }

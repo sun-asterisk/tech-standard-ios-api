@@ -15,7 +15,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        TokenManager.shared.setToken("test token")
+        TokenManager.shared.token = Token(accessToken: "a token", refreshToken: "a refresh token", isExpired: true)
         DefaultAPIService.shared.logger = APILoggers.verbose
 //        APILoggers.intermediate.prettyPrinted = true
 //        APILoggers.intermediate.maxLength = 1000
