@@ -3,7 +3,9 @@ import APIService
 import RxSwift
 import Combine
 
-public extension APIService {
+extension RxAPIService: ReactiveCompatible {}
+
+public extension Reactive where Base: RxAPIService {
     /// Performs a network request and returns an Observable emitting the raw response and data.
     ///
     /// - Parameters:
@@ -14,13 +16,13 @@ public extension APIService {
         _ endpoint: URLRequestConvertible,
         queue: DispatchQueue = .main
     ) -> Observable<(response: URLSession.DataTaskPublisher.Output, data: Data)> {
-        return Observable.create { [weak self] observer in
-            guard let self else {
+        return Observable.create { [weak base] observer in
+            guard let base else {
                 observer.onCompleted()
                 return Disposables.create()
             }
             
-            let cancellable = self.request(endpoint, queue: queue)
+            let cancellable = base.request(endpoint, queue: queue)
                 .sink(receiveCompletion: { completion in
                     switch completion {
                     case .failure(let error):
