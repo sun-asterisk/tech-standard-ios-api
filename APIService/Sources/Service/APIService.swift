@@ -88,6 +88,10 @@ public extension AnyPublisher where Output == URLSession.DataTaskPublisher.Outpu
             .eraseToAnyPublisher()
     }
     
+    /// Transforms the publisher to emit a JSON object as a dictionary.
+    ///
+    /// - Returns: A publisher that emits a dictionary representing the JSON or an error.
+    ///            If the data cannot be converted to a dictionary, it emits `nil`.
     func json() -> AnyPublisher<[String: Any]?, Error> {
         map { $0.data.toJSON() }
             .eraseToAnyPublisher()
