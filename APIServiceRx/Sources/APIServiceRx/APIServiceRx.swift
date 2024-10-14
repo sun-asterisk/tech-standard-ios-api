@@ -15,7 +15,7 @@ public extension Reactive where Base: RxAPIService {
     func request(
         _ endpoint: URLRequestConvertible,
         queue: DispatchQueue = .main
-    ) -> Observable<(response: URLSession.DataTaskPublisher.Output, data: Data)> {
+    ) -> Observable<URLSession.DataTaskPublisher.Output> {
         return Observable.create { [weak base] observer in
             guard let base else {
                 observer.onCompleted()
@@ -31,7 +31,7 @@ public extension Reactive where Base: RxAPIService {
                         observer.onCompleted()
                     }
                 }, receiveValue: { output in
-                    observer.onNext((response: output, data: output.data))
+                    observer.onNext(output)
                 })
             
             return Disposables.create {
