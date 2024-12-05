@@ -6,6 +6,10 @@ open class VerboseLogger: BaseLogger {
     /// The shared singleton instance of VerboseLogger.
     public static let shared = VerboseLogger()
     
+    public override init() {
+        super.init()
+    }
+    
     /// Logs detailed information about a URLRequest, including headers and body.
     ///
     /// - Parameter urlRequest: The URLRequest to log.

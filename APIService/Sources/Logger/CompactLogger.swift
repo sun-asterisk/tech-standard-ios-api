@@ -4,6 +4,10 @@ import Foundation
 open class CompactLogger: BaseLogger {
     public static let shared = CompactLogger()
     
+    public override init() {
+        super.init()
+    }
+    
     /// Logs minimal information about a URLRequest.
     ///
     /// - Parameter urlRequest: The URLRequest to log.

@@ -6,6 +6,10 @@ open class IntermediateLogger: BaseLogger {
     /// The shared singleton instance of IntermediateLogger.
     public static let shared = IntermediateLogger()
     
+    public override init() {
+        super.init()
+    }
+    
     /// Logs detailed information about a URLRequest, including headers and body.
     ///
     /// - Parameter urlRequest: The URLRequest to log.
