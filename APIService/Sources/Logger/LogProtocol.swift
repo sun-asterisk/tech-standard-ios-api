@@ -35,6 +35,6 @@ open class ConsoleLog: LogProtocol {
 }
 
 public enum Logs {
-    public static let osLog = OSLog.shared
-    public static let consoleLog = ConsoleLog.shared
+    public static let os = OSLog.shared
+    public static let console = ConsoleLog.shared
 }
