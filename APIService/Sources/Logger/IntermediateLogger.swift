@@ -2,23 +2,14 @@ import Foundation
 import os.log
 
 /// A logger implementation that logs intermediate level details about API requests and responses.
-public class IntermediateLogger: APILogger {
+open class IntermediateLogger: BaseLogger {
     /// The shared singleton instance of IntermediateLogger.
     public static let shared = IntermediateLogger()
-    
-    /// Optional prefix to add to log messages.
-    public var prefix: String? = "[API]"
-    
-    /// Determines if the logged JSON should be pretty printed.
-    public var prettyPrinted = false
-    
-    /// The maximum length of the logged data.
-    public var maxLength = 500
     
     /// Logs detailed information about a URLRequest, including headers and body.
     ///
     /// - Parameter urlRequest: The URLRequest to log.
-    public func logRequest(_ urlRequest: URLRequest) {
+    open override func logRequest(_ urlRequest: URLRequest) {
         let method = urlRequest.httpMethod ?? "UNKNOWN"
         let urlString = urlRequest.url?.absoluteString ?? ""
         var logString = method + " " + urlString + "\n"
@@ -37,7 +28,7 @@ public class IntermediateLogger: APILogger {
             logString = prefix + " " + logString
         }
         
-        os_log("%{PUBLIC}@", log: .default, type: .info, logString)
+        log.log(logString)
     }
     
     /// Logs detailed information about a URLResponse, including status code, headers, and body.
@@ -45,7 +36,7 @@ public class IntermediateLogger: APILogger {
     /// - Parameters:
     ///   - response: The URLResponse to log.
     ///   - data: The data associated with the response, if any.
-    public func logResponse(_ response: URLResponse?, data: Data?) {
+    open override func logResponse(_ response: URLResponse?, data: Data?) {
         var logString = ""
         
         if let httpResponse = response as? HTTPURLResponse {
@@ -62,6 +53,6 @@ public class IntermediateLogger: APILogger {
             logString = prefix + " " + logString
         }
         
-        os_log("%{PUBLIC}@", log: .default, type: .info, logString)
+        log.log(logString)
     }
 }

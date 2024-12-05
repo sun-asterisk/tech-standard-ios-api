@@ -1,17 +1,13 @@
 import Foundation
-import os.log
 
 /// A compact logger implementation that logs minimal information about API requests and responses.
-public class CompactLogger: APILogger {
+open class CompactLogger: BaseLogger {
     public static let shared = CompactLogger()
-    
-    /// Optional prefix to add to log messages.
-    public var prefix: String? = "[API]"
     
     /// Logs minimal information about a URLRequest.
     ///
     /// - Parameter urlRequest: The URLRequest to log.
-    public func logRequest(_ urlRequest: URLRequest) {
+    open override func logRequest(_ urlRequest: URLRequest) {
         let method = urlRequest.httpMethod ?? "UNKNOWN"
         let urlString = urlRequest.url?.absoluteString ?? ""
         var logString = method + " " + urlString
@@ -20,7 +16,7 @@ public class CompactLogger: APILogger {
             logString = prefix + " " + logString
         }
         
-        os_log("%{PUBLIC}@", log: .default, type: .info, logString)
+        log.log(logString)
     }
     
     /// Logs minimal information about a URLResponse, including status code and URL.
@@ -28,7 +24,7 @@ public class CompactLogger: APILogger {
     /// - Parameters:
     ///   - response: The URLResponse to log.
     ///   - data: The data associated with the response, if any.
-    public func logResponse(_ response: URLResponse?, data: Data?) {
+    open override func logResponse(_ response: URLResponse?, data: Data?) {
         var logString = ""
         
         if let httpResponse = response as? HTTPURLResponse {
@@ -41,6 +37,6 @@ public class CompactLogger: APILogger {
             logString = prefix + " " + logString
         }
         
-        os_log("%{PUBLIC}@", log: .default, type: .info, logString)
+        log.log(logString)
     }
 }

@@ -17,6 +17,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     ) -> Bool {
         TokenManager.shared.token = Token(accessToken: "a token", refreshToken: "a refresh token", isExpired: true)
         DefaultAPIService.shared.logger = APILoggers.verbose
+        APILoggers.verbose.log = Logs.consoleLog
 //        APILoggers.intermediate.prettyPrinted = true
 //        APILoggers.intermediate.maxLength = 1000
 //        CompactLogger.shared.prefix = nil
