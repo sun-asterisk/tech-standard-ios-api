@@ -18,6 +18,8 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         TokenManager.shared.token = Token(accessToken: "a token", refreshToken: "a refresh token", isExpired: true)
         DefaultAPIService.shared.logger = APILoggers.verbose
         APILoggers.verbose.log = Logs.console
+        APILoggers.verbose.prettyPrinted = true
+        APILoggers.verbose.maxLength = 2000
 //        APILoggers.intermediate.prettyPrinted = true
 //        APILoggers.intermediate.maxLength = 1000
 //        CompactLogger.shared.prefix = nil

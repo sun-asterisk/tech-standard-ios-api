@@ -41,7 +41,7 @@ extension Data: JSONConvertible {
     ///   - maxLength: The maximum length of the resulting string. Defaults to 0 (no limit).
     /// - Returns: A JSON string if the conversion is successful, otherwise nil.
     public func toJSONString(prettyPrinted: Bool = false, maxLength: Int = 0) -> String? {
-        guard let jsonObject = toJSON() else {
+        guard let jsonObject: Any = toJSON() ?? toJSONArray() else {
             return self.toUTF8String(maxLength: maxLength)
         }
         
@@ -62,6 +62,13 @@ extension Data {
     /// - Returns: A dictionary if the Data can be successfully converted to JSON, otherwise nil.
     public func toJSON() -> [String: Any]? {
         try? JSONSerialization.jsonObject(with: self, options: []) as? [String: Any]
+    }
+    
+    /// Converts Data to a JSON array.
+    ///
+    /// - Returns: An array if the Data can be successfully converted to JSON, otherwise nil.
+    public func toJSONArray() -> [[String: Any]]? {
+        try? JSONSerialization.jsonObject(with: self, options: []) as? [[String: Any]]
     }
     
     /// Converts Data to a UTF-8 string.
