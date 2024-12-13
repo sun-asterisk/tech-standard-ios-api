@@ -90,7 +90,8 @@ public extension Endpoint {
         guard var components else { return nil }
         
         if let queryItems {
-            components.queryItems = queryItems.compactMap { URLQueryItem(name: $0, value: "\($1)") }
+            components.queryItems = (components.queryItems ?? [])
+                + queryItems.compactMap { URLQueryItem(name: $0, value: "\($1)") }
         }
         
         return components
