@@ -13,15 +13,8 @@ let package = Package(
         .library(
             name: "APIService",
             targets: ["APIService"]),
-        .library(
-            name: "APIServiceRx",
-            targets: ["APIServiceRx"]),
     ],
     dependencies: [
-        .package(
-            url: "https://github.com/ReactiveX/RxSwift.git",
-            .upToNextMajor(from: "6.0.0")
-        ),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -29,14 +22,6 @@ let package = Package(
         .target(
             name: "APIService",
             path: "APIService/Sources"
-        ),
-        .target(
-            name: "APIServiceRx",
-            dependencies: [
-                "APIService",
-                .product(name: "RxSwift", package: "RxSwift"),
-            ],
-            path: "APIServiceRx/Sources"
         ),
     ],
     swiftLanguageVersions: [.v5]
