@@ -10,21 +10,18 @@ open class IntermediateLogger: BaseLogger {
         super.init()
     }
     
-    /// Logs detailed information about a URLRequest, including headers and body.
-    ///
-    /// - Parameter urlRequest: The URLRequest to log.
-    open override func logRequest(_ urlRequest: URLRequest) {
-        let method = urlRequest.httpMethod ?? "UNKNOWN"
-        let urlString = urlRequest.url?.absoluteString ?? ""
+    open override func logRequest(_ request: URLRequest) {
+        let method = request.httpMethod ?? "UNKNOWN"
+        let urlString = request.url?.absoluteString ?? ""
         var logString = method + " " + urlString + "\n"
         
-        if let headers = urlRequest.allHTTPHeaderFields {
+        if let headers = request.allHTTPHeaderFields {
             for (key, value) in headers {
                 logString += "\(key): \(value)\n"
             }
         }
         
-        if let bodyData = urlRequest.httpBody, let bodyString = bodyData.toJSONString(prettyPrinted: prettyPrinted) {
+        if let bodyData = request.httpBody, let bodyString = bodyData.toJSONString(prettyPrinted: prettyPrinted) {
             logString += bodyString
         }
         
@@ -35,12 +32,7 @@ open class IntermediateLogger: BaseLogger {
         log.log(logString)
     }
     
-    /// Logs detailed information about a URLResponse, including status code, headers, and body.
-    ///
-    /// - Parameters:
-    ///   - response: The URLResponse to log.
-    ///   - data: The data associated with the response, if any.
-    open override func logResponse(_ response: URLResponse?, data: Data?) {
+    open override func logResponse(forRequest request: URLRequest?, response: URLResponse?, data: Data?) {
         var logString = ""
         
         if let httpResponse = response as? HTTPURLResponse {

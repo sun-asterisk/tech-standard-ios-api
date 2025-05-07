@@ -8,12 +8,9 @@ open class CompactLogger: BaseLogger {
         super.init()
     }
     
-    /// Logs minimal information about a URLRequest.
-    ///
-    /// - Parameter urlRequest: The URLRequest to log.
-    open override func logRequest(_ urlRequest: URLRequest) {
-        let method = urlRequest.httpMethod ?? "UNKNOWN"
-        let urlString = urlRequest.url?.absoluteString ?? ""
+    open override func logRequest(_ request: URLRequest) {
+        let method = request.httpMethod ?? "UNKNOWN"
+        let urlString = request.url?.absoluteString ?? ""
         var logString = method + " " + urlString
         
         if let prefix {
@@ -22,13 +19,8 @@ open class CompactLogger: BaseLogger {
         
         log.log(logString)
     }
-    
-    /// Logs minimal information about a URLResponse, including status code and URL.
-    ///
-    /// - Parameters:
-    ///   - response: The URLResponse to log.
-    ///   - data: The data associated with the response, if any.
-    open override func logResponse(_ response: URLResponse?, data: Data?) {
+
+    open override func logResponse(forRequest request: URLRequest?, response: URLResponse?, data: Data?) {
         var logString = ""
         
         if let httpResponse = response as? HTTPURLResponse {

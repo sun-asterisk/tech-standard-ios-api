@@ -68,7 +68,7 @@ public class DownloadTaskHandler: NSObject, URLSessionDownloadDelegate {
     
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         guard let url = downloadTask.originalRequest?.url else { return }
-        logger?.logResponse(downloadTask.response, data: nil)
+        logger?.logResponse(forRequest: downloadTask.originalRequest, response: downloadTask.response, data: nil)
         didFinishDownloading?(url, location)
     }
     

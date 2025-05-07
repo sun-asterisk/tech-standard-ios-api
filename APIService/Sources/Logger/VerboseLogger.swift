@@ -10,29 +10,26 @@ open class VerboseLogger: BaseLogger {
         super.init()
     }
     
-    /// Logs detailed information about a URLRequest, including headers and body.
-    ///
-    /// - Parameter urlRequest: The URLRequest to log.
-    open override func logRequest(_ urlRequest: URLRequest) {
-        let httpMethod = urlRequest.httpMethod ?? "UNKNOWN"
-        let path = urlRequest.url?.path ?? "UNKNOWN"
+    open override func logRequest(_ request: URLRequest) {
+        let httpMethod = request.httpMethod ?? "UNKNOWN"
+        let path = request.url?.path ?? "UNKNOWN"
         var logString = "\(httpMethod) \(path)\n"
         
-        if let queryItems = urlRequest.url?.query {
+        if let queryItems = request.url?.query {
             logString += "Query: \(queryItems)\n"
         }
         
-        if let host = urlRequest.url?.host {
+        if let host = request.url?.host {
             logString += "Host: \(host)\n"
         }
         
-        if let headers = urlRequest.allHTTPHeaderFields {
+        if let headers = request.allHTTPHeaderFields {
             for (key, value) in headers {
                 logString += "\(key): \(value)\n"
             }
         }
         
-        if let bodyData = urlRequest.httpBody, let bodyString = bodyData.toJSONString(prettyPrinted: prettyPrinted) {
+        if let bodyData = request.httpBody, let bodyString = bodyData.toJSONString(prettyPrinted: prettyPrinted) {
             logString += "\n\(bodyString)"
         }
         
@@ -43,12 +40,7 @@ open class VerboseLogger: BaseLogger {
         log.log(logString)
     }
     
-    /// Logs detailed information about a URLResponse, including status code, headers, and body.
-    ///
-    /// - Parameters:
-    ///   - response: The URLResponse to log.
-    ///   - data: The data associated with the response, if any.
-    open override func logResponse(_ response: URLResponse?, data: Data?) {
+    open override func logResponse(forRequest request: URLRequest?, response: URLResponse?, data: Data?) {
         var logString = ""
         
         if let httpResponse = response as? HTTPURLResponse {

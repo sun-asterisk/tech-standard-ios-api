@@ -21,11 +21,11 @@ open class BaseLogger: APILogger {
     /// The log to use for logging.
     open var log: LogProtocol = OSLog()
     
-    public func logRequest(_ urlRequest: URLRequest) {
+    public func logRequest(_ request: URLRequest) {
         fatalError("Subclasses must implement this method")
     }
 
-    public func logResponse(_ response: URLResponse?, data: Data?) {
+    public func logResponse(forRequest request: URLRequest?, response: URLResponse?, data: Data?) {
         fatalError("Subclasses must implement this method")
     }
 }

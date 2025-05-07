@@ -89,7 +89,7 @@ public class DataTaskHandler: NSObject, URLSessionDataDelegate {
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard let url = task.originalRequest?.url else { return }
         
-        logger?.logResponse(task.response, data: nil)
+        logger?.logResponse(forRequest: task.originalRequest, response: task.response, data: nil)
         
         if let error = error as? URLError {
             didComplete?(url, error)

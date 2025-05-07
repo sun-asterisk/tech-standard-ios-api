@@ -39,7 +39,7 @@ public extension APIService {
         
         return session.dataTaskPublisher(for: urlRequest)
             .tryMap { [weak self] output in
-                self?.logger?.logResponse(output.response, data: output.data)
+                self?.logger?.logResponse(forRequest: urlRequest, response: output.response, data: output.data)
                 
                 guard let httpResponse = output.response as? HTTPURLResponse else {
                     throw URLError(.badServerResponse)
@@ -117,7 +117,7 @@ public extension APIService {
         
         return session.downloadTaskPublisher(for: urlRequest)
             .handleEvents(receiveOutput: { [weak self] output in
-                self?.logger?.logResponse(output.response, data: nil)
+                self?.logger?.logResponse(forRequest: urlRequest, response: output.response, data: nil)
             })
             .map { $0.url }
             .receive(on: queue)
