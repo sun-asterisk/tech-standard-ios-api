@@ -45,7 +45,7 @@ extension Data: JSONConvertible {
             return self.toUTF8String(maxLength: maxLength)
         }
         
-        let options: JSONSerialization.WritingOptions = prettyPrinted ? [.prettyPrinted] : []
+        let options: JSONSerialization.WritingOptions = prettyPrinted ? [.prettyPrinted, .sortedKeys] : []
         
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: jsonObject, options: options)
