@@ -57,7 +57,7 @@ public protocol Endpoint: URLRequestConvertible {
     var urlString: String? { get }
     var httpMethod: HttpMethod { get }
     var headers: [String: Any]? { get }
-    var queryItems: [String: Any]? { get }
+    var queryItems: [(String, Any)]? { get }
     var body: [String: Any]? { get }
     var bodyData: Data? { get }
     var parts: [MultipartFormData] { get }
@@ -69,7 +69,7 @@ public extension Endpoint {
     var urlString: String? { nil }
     var httpMethod: HttpMethod { .get }
     var headers: [String: Any]? { nil }
-    var queryItems: [String: Any]? { nil }
+    var queryItems: [(String, Any)]? { nil }
     var body: [String: Any]? { nil }
     var bodyData: Data? { nil }
     var parts: [MultipartFormData] { [] }
@@ -91,7 +91,9 @@ public extension Endpoint {
         
         if let queryItems {
             components.queryItems = (components.queryItems ?? [])
-                + queryItems.compactMap { URLQueryItem(name: $0, value: "\($1)") }
+                + queryItems.map { (name, value) in
+                    return URLQueryItem(name: name, value: "\(value)")
+                }
         }
         
         return components

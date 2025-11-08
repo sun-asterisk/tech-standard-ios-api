@@ -44,7 +44,7 @@ public struct CustomEndpoint: Endpoint {
     }
 
     /// The query items for the endpoint.
-    public var queryItems: [String: Any]? {
+    public var queryItems: [(String, Any)]? {
         if case let .queryItems(value) = overrides {
             return value
         }
@@ -97,7 +97,7 @@ public enum OverrideOptions {
     case urlString(String?)
     case httpMethod(HttpMethod)
     case headers([String: Any]?)
-    case queryItems([String: Any]?)
+    case queryItems([(String, Any)]?)
     case body([String: Any]?)
     case bodyData(Data?)
     case parts([MultipartFormData])
@@ -183,23 +183,6 @@ public extension Endpoint {
     func add(headers: (Self) -> [String: Any]?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .headers(headers(self)))
     }
-
-    /// Adds headers to the endpoint by merging with existing headers.
-    ///
-    /// - Parameter additionalHeaders: The headers to merge with existing headers.
-    /// - Returns: A new endpoint with the merged headers.
-    @available(*, deprecated, message: "Use append(headers:) instead")
-    func add(additionalHeaders: [String: Any]) -> Endpoint {
-        let newHeaders: [String: Any]
-        
-        if let currentHeaders = self.headers {
-            newHeaders = mergeDictionaries(currentHeaders, additionalHeaders)
-        } else {
-            newHeaders = additionalHeaders
-        }
-        
-        return CustomEndpoint(endpoint: self, overrides: .headers(newHeaders))
-    }
     
     /// Appends headers to the existing headers of the endpoint.
     ///
@@ -237,16 +220,67 @@ public extension Endpoint {
     ///
     /// - Parameter queryItems: The query items to add.
     /// - Returns: A new endpoint with the query items added.
-    func add(queryItems: [String: Any]?) -> Endpoint {
+    func add(queryItems: [(String, Any)]?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .queryItems(queryItems))
     }
-
+    
     /// Adds query items to the endpoint using a closure.
     ///
     /// - Parameter queryItems: A closure that returns the query items to add.
     /// - Returns: A new endpoint with the query items added.
-    func add(queryItems: (Self) -> [String: Any]?) -> Endpoint {
+    func add(queryItems: (Self) -> [(String, Any)]?) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .queryItems(queryItems(self)))
+    }
+    
+    /// Adds query items to the endpoint.
+    ///
+    /// - Parameter queryItems: The query items to add as a dictionary.
+    /// - Returns: A new endpoint with the query items added.
+    func add(queryItems: [String: Any]?) -> Endpoint {
+        guard let queryItems else {
+            return self
+        }
+        
+        let queryItemsArray = queryItems.map { ($0, $1) }
+        return CustomEndpoint(endpoint: self, overrides: .queryItems(queryItemsArray))
+    }
+    
+    /// Adds query items to the endpoint using a closure.
+    ///
+    /// - Parameter queryItems: A closure that returns the query items to add as a dictionary.
+    /// - Returns: A new endpoint with the query items added.
+    func add(queryItems: (Self) -> [String: Any]?) -> Endpoint {
+        guard let queryItems = queryItems(self) else {
+            return self
+        }
+        
+        let queryItemsArray = queryItems.map { ($0, $1) }
+        return CustomEndpoint(endpoint: self, overrides: .queryItems(queryItemsArray))
+    }
+    
+    /// Appends query items to the existing query items of the endpoint.
+    ///
+    /// - Parameter queryItems: The query items to append.
+    /// - Returns: A new endpoint with the appended query items.
+    func append(queryItems: [(String, Any)]) -> Endpoint {
+        let newQueryItems: [(String, Any)]
+        
+        if let currentQueryItems = self.queryItems {
+            newQueryItems = currentQueryItems + queryItems
+        } else {
+            newQueryItems = queryItems
+        }
+        
+        return CustomEndpoint(endpoint: self, overrides: .queryItems(newQueryItems))
+    }
+    
+    /// Appends query items to the existing query items of the endpoint.
+    ///
+    ///  - Parameter queryItems: The query items to append as a dictionary.
+    ///  - Returns: A new endpoint with the appended query items.
+    func append(queryItems: [String: Any]) -> Endpoint {
+        let queryItemsArray = queryItems.map { ($0, $1) }
+        return append(queryItems: queryItemsArray)
     }
     
     /// Adds a body to the endpoint.

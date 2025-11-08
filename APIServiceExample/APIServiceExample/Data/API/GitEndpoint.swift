@@ -45,18 +45,18 @@ extension GitEndpoint: Endpoint {
         }
     }
     
-    var queryItems: [String : Any]? {
+    var queryItems: [(String, Any)]? {
         switch self {
         case let .repos(page, perPage):
             return [
-                "q": "language:swift",
-                "per_page": perPage,
-                "page": page
+                ("q", "language:swift"),
+                ("per_page", perPage),
+                ("page", page)
             ]
         case let .events(_, page, perPage):
             return [
-                "per_page": perPage,
-                "page": page
+                ("per_page", perPage),
+                ("page", page)
             ]
         }
     }

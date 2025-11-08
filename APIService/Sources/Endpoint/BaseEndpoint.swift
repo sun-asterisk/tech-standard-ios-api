@@ -7,7 +7,7 @@ public struct BaseEndpoint: Endpoint {
     public var urlString: String?
     public var httpMethod = HttpMethod.get
     public var headers: [String: Any]?
-    public var queryItems: [String: Any]?
+    public var queryItems: [(String, Any)]?
     public var body: [String: Any]?
     public var bodyData: Data?
     public var parts: [MultipartFormData]
@@ -28,9 +28,9 @@ public struct BaseEndpoint: Endpoint {
                 path: String? = nil,
                 urlString: String? = nil,
                 httpMethod: HttpMethod = HttpMethod.get,
-                headers: [String : Any]? = nil,
-                queryItems: [String : Any]? = nil,
-                body: [String : Any]? = nil,
+                headers: [String: Any]? = nil,
+                queryItems: [(String, Any)]? = nil,
+                body: [String: Any]? = nil,
                 bodyData: Data? = nil,
                 parts: [MultipartFormData] = []
     ) {
