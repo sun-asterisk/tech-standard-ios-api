@@ -1,5 +1,5 @@
 import Foundation
-import MobileCoreServices
+import UniformTypeIdentifiers
 
 /// Enumeration of HTTP methods.
 public enum HttpMethod: String {
@@ -228,11 +228,12 @@ public extension Endpoint {
         
         // Try using system UTI first (iOS 14+)
         if #available(iOS 14.0, *) {
-            guard let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension, nil)?.takeRetainedValue(),
-                  let mimeType = UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType)?.takeRetainedValue() else {
-                return "application/octet-stream" // default MIME type
+            let ext = url.pathExtension
+            if let utType = UTType(filenameExtension: ext),
+               let mimeType = utType.preferredMIMEType {
+                return mimeType
             }
-            return mimeType as String
+            return "application/octet-stream"
         }
         
         // Fallback to manual mapping

@@ -1,6 +1,5 @@
 import Foundation
 import Combine
-import UIKit
 import os.log
 
 /// A protocol that defines the requirements for an API service.

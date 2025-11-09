@@ -1,5 +1,4 @@
 import Foundation
-import MobileCoreServices
 
 /// Represents a custom endpoint that can override properties of another endpoint.
 public struct CustomEndpoint: Endpoint {
@@ -337,78 +336,6 @@ public extension Endpoint {
     /// - Returns: A new endpoint with the appended multipart form data parts.
     func append(parts: [MultipartFormData]) -> Endpoint {
         CustomEndpoint(endpoint: self, overrides: .parts(self.parts + parts))
-    }
-
-    /// Configures the endpoint for a multipart form-data request.
-    ///
-    /// - Parameter boundary: The boundary string for the multipart form-data. Defaults to a UUID string.
-    /// - Returns: A new endpoint configured for multipart form-data with the appropriate headers and body.
-    func multipart(boundary: String = "Boundary-\(UUID().uuidString)") -> Endpoint {
-        let endpoint = append(headers: [
-            "Content-Type": "multipart/form-data; boundary=" + boundary
-        ])
-        
-        return endpoint.addMultipartBody(boundary: boundary)
-    }
-    
-    private func addMultipartBody(boundary: String) -> Endpoint {
-        var bodyData = Data()
-
-        if let parameters = body {
-            for (key, value) in parameters {
-                bodyData.append("--\(boundary)\r\n")
-                bodyData.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n")
-                bodyData.append("\(value)\r\n")
-            }
-        }
-
-        for part in self.parts {
-            switch part.provider {
-            case .data(let data):
-                bodyData.append("--\(boundary)\r\n")
-                
-                if let fileName = part.fileName {
-                    bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"; filename=\"\(fileName)\"\r\n")
-                } else {
-                    bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"\r\n\r\n")
-                }
-                
-                if let mimeType = part.mimeType {
-                    bodyData.append("Content-Type: \(mimeType)\r\n\r\n")
-                }
-                
-                bodyData.append(data)
-            case .file(let url):
-                if let fileData = try? Data(contentsOf: url) {
-                    bodyData.append("--\(boundary)\r\n")
-                    
-                    if let fileName = part.fileName {
-                        bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"; filename=\"\(fileName)\"\r\n")
-                    } else {
-                        bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"\r\n\r\n")
-                    }
-                    
-                    let mimeType = part.mimeType ?? mimeType(for: url)
-                    bodyData.append("Content-Type: \(mimeType)\r\n\r\n")
-                    
-                    bodyData.append(fileData)
-                }
-            }
-            
-            bodyData.append("\r\n")
-        }
-
-        bodyData.append("--\(boundary)--\r\n")
-        return self.add(bodyData: bodyData)
-    }
-    
-    private func mimeType(for url: URL) -> String {
-        let pathExtension = url.pathExtension as NSString
-        guard let uti = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, pathExtension, nil)?.takeRetainedValue(),
-              let mimeType = UTTypeCopyPreferredTagWithClass(uti, kUTTagClassMIMEType)?.takeRetainedValue() else {
-            return "application/octet-stream" // default MIME type
-        }
-        return mimeType as String
     }
 }
 
