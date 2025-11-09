@@ -56,11 +56,17 @@ private extension RepoListView {
     @ViewBuilder
     func listView() -> some View {
         List {
-            ForEach(repos) { repo in
+            ForEach(repos.indices, id: \.self) { index in
+                let repo = repos[index]
                 NavigationLink {
                     RepoDetailView(repo: repo)
                 } label: {
                     RepoView(repo: repo)
+                }
+                .onAppear {
+                    if index == repos.count - 1 {
+                        loadMoreRepos()
+                    }
                 }
             }
             
@@ -69,14 +75,6 @@ private extension RepoListView {
                     .progressViewStyle(.circular)
                     .listRowSeparator(.hidden)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    
-            } else {
-                Color.clear
-                    .listRowSeparator(.hidden)
-                    .padding()
-                    .onAppear {
-                        loadMoreRepos()
-                    }
             }
         }
         .refreshable {
