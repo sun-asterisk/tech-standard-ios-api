@@ -36,6 +36,12 @@ final class RepoGateway: RepoGatewayProtocol {
             .publisher
             .addToken(manager: TokenManager.shared)
             .map { $0.add(httpMethod: .get) }
+            .map { ep in
+                ep.append(queryItems: [
+                    "page": page,
+                    "per_page": perPage
+                ])
+            }
             .flatMap { ep in
                 APIServices.default
                     .request(ep)
