@@ -101,6 +101,14 @@ private extension String {
     }
 }
 
+public extension Dictionary where Key == String, Value == Any {
+    /// Converts the dictionary to an array of query items.
+    /// - Returns: An array of tuples representing the query items.
+    func toQueryItems() -> [(String, Any)] {
+        return self.map { ($0.key, $0.value) }
+    }
+}
+
 public extension Endpoint {
     /// Constructs URLComponents from the endpoint's properties.
     private var urlComponents: URLComponents? {
