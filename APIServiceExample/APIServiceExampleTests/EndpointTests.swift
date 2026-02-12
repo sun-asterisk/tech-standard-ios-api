@@ -387,6 +387,33 @@ func multipartWithoutFileName() {
         #expect(bodyString?.contains("Content-Disposition: form-data; name=\"textField\"") ?? false)
     }
 }
+
+@Test("Multipart data with fileName and no mimeType keeps header/body separator")
+func multipartWithFileNameWithoutMimeTypeHasSeparator() {
+    let data = "raw-data".data(using: .utf8)!
+    let part = MultipartFormData(
+        provider: .data(data),
+        name: "file",
+        fileName: "raw.bin",
+        mimeType: nil
+    )
+
+    let endpoint = MockEndpoint(
+        urlString: "https://api.example.com/upload",
+        httpMethod: .post,
+        parts: [part]
+    )
+
+    let request = endpoint.urlRequest
+
+    #expect(request != nil)
+
+    if let httpBody = request?.httpBody {
+        let bodyString = String(data: httpBody, encoding: .utf8)
+        #expect(bodyString != nil)
+        #expect(bodyString?.contains("filename=\"raw.bin\"\r\n\r\nraw-data") ?? false)
+    }
+}
     
 // MARK: - MIME Type Tests
 
