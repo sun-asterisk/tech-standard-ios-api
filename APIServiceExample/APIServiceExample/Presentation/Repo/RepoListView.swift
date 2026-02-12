@@ -90,11 +90,12 @@ private extension RepoListView {
     func loadRepos() {
         getRepos(page: 1, perPage: perPage)
             .handleFailure(error: $error)
-            .sink { repos in
+            .sink(receiveCompletion: { _ in
+                state = .loaded
+            }, receiveValue: { repos in
                 self.page = 1
                 self.repos = repos
-                state = .loaded
-            }
+            })
             .store(in: cancelBag)
     }
     
@@ -110,11 +111,12 @@ private extension RepoListView {
 
         getRepos(page: page + 1, perPage: perPage)
             .handleFailure(error: $error)
-            .sink { repos in
+            .sink(receiveCompletion: { _ in
+                state = .loaded
+            }, receiveValue: { repos in
                 self.page += 1
                 self.repos += repos
-                state = .loaded
-            }
+            })
             .store(in: cancelBag)
     }
 }

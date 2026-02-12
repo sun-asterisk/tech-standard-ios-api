@@ -86,7 +86,7 @@ class MyAPIService: APIService {
             .publisher
             .addToken(manager: TokenManager.shared)
             .flatMap { [unowned self] ep in
-                self.request(endpoint, queue: queue)
+                self.request(ep, queue: queue)
             }
             // .handleError()
             .eraseToAnyPublisher()

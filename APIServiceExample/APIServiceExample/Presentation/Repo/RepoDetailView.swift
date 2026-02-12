@@ -102,10 +102,11 @@ private extension RepoDetailView {
     func loadEvents() {
         getEvents(url: repo.eventUrl, page: 1, perPage: perPage)
             .handleFailure(error: $error)
-            .sink { events in
+            .sink(receiveCompletion: { _ in
                 self.state = .loaded
+            }, receiveValue: { events in
                 self.events = events
-            }
+            })
             .store(in: cancelBag)
     }
     
@@ -121,11 +122,12 @@ private extension RepoDetailView {
 
         getEvents(url: repo.eventUrl, page: page + 1, perPage: perPage)
             .handleFailure(error: $error)
-            .sink { events in
+            .sink(receiveCompletion: { _ in
+                state = .loaded
+            }, receiveValue: { events in
                 self.page += 1
                 self.events += events
-                state = .loaded
-            }
+            })
             .store(in: cancelBag)
     }
 }

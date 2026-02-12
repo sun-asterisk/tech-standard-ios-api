@@ -66,7 +66,7 @@ extension AnyPublisher where Output == Endpoint {
         return self.map { endpoint in
             return manager.validToken()
                 .map { token in
-                    endpoint.append(headers: ["access_token": token])
+                    endpoint.append(headers: ["Authorization": "Bearer \(token.accessToken)"])
                 }
         }
         .mapError { $0 as Error }
