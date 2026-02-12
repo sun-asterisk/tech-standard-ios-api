@@ -383,7 +383,8 @@ extension CustomEndpoint: EndpointConvertible {
             headers: headers,
             queryItems: queryItems,
             body: body,
-            bodyData: bodyData
+            bodyData: bodyData,
+            parts: parts
         )
     }
 }

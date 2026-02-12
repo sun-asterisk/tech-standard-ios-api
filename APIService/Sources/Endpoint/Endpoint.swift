@@ -116,9 +116,12 @@ public extension Endpoint {
         
         if let urlString {
             components = URLComponents(string: urlString)
-        } else if let base, let path {
+        } else if let base {
             components = URLComponents(string: base)
-            components?.path = path
+            if let endpointPath = normalizedPath(path) {
+                let basePath = components?.path ?? ""
+                components?.path = mergePath(basePath: basePath, endpointPath: endpointPath)
+            }
         }
         
         guard var components else { return nil }
@@ -131,6 +134,29 @@ public extension Endpoint {
         }
         
         return components
+    }
+
+    /// Normalizes a path so it always starts with "/" and ignores blank values.
+    private func normalizedPath(_ path: String?) -> String? {
+        guard let path = path?.trimmingCharacters(in: .whitespacesAndNewlines), !path.isEmpty else {
+            return nil
+        }
+
+        return path.hasPrefix("/") ? path : "/\(path)"
+    }
+
+    /// Merges base path and endpoint path while preserving any path already present in base URL.
+    private func mergePath(basePath: String, endpointPath: String) -> String {
+        guard !basePath.isEmpty, basePath != "/" else {
+            return endpointPath
+        }
+
+        if endpointPath == "/" {
+            return basePath
+        }
+
+        let trimmedBase = basePath.hasSuffix("/") ? String(basePath.dropLast()) : basePath
+        return trimmedBase + endpointPath
     }
     
     /// Constructs a URLRequest from the endpoint's properties.
@@ -148,7 +174,10 @@ public extension Endpoint {
         if !parts.isEmpty {
             let boundary = "Boundary-\(UUID().uuidString)"
             request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-            request.httpBody = createMultipartBody(parts: parts, boundary: boundary)
+            guard let multipartBody = try? createMultipartBody(parts: parts, boundary: boundary) else {
+                return nil
+            }
+            request.httpBody = multipartBody
         } else if let bodyData {
             // Use bodyData as-is if provided
             if request.value(forHTTPHeaderField: "Content-Type") == nil {
@@ -174,7 +203,7 @@ public extension Endpoint {
     ///   - parts: The multipart form data parts.
     ///   - boundary: The boundary string for separating parts.
     /// - Returns: The multipart form data as `Data`.
-    private func createMultipartBody(parts: [MultipartFormData], boundary: String) -> Data {
+    private func createMultipartBody(parts: [MultipartFormData], boundary: String) throws -> Data {
         var bodyData = Data()
         let lineBreak = "\r\n"
         
@@ -207,19 +236,18 @@ public extension Endpoint {
                 bodyData.append(data)
                 
             case .file(let url):
-                if let fileData = try? Data(contentsOf: url) {
-                    if let fileName = part.fileName {
-                        bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"; filename=\"\(fileName)\"\(lineBreak)".utf8Data)
-                    } else {
-                        bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"\(lineBreak)".utf8Data)
-                    }
-                    
-                    let mimeType = part.mimeType ?? mimeType(for: url)
-                    bodyData.append("Content-Type: \(mimeType)\(lineBreak)".utf8Data)
-                    
-                    bodyData.append(lineBreak.utf8Data)
-                    bodyData.append(fileData)
+                let fileData = try Data(contentsOf: url)
+                if let fileName = part.fileName {
+                    bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"; filename=\"\(fileName)\"\(lineBreak)".utf8Data)
+                } else {
+                    bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"\(lineBreak)".utf8Data)
                 }
+
+                let mimeType = part.mimeType ?? mimeType(for: url)
+                bodyData.append("Content-Type: \(mimeType)\(lineBreak)".utf8Data)
+
+                bodyData.append(lineBreak.utf8Data)
+                bodyData.append(fileData)
             }
             
             bodyData.append(lineBreak.utf8Data)

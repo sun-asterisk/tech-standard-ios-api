@@ -99,6 +99,29 @@ func urlConstructionWithQueryItems() {
     #expect(url.contains("limit=10"))
     #expect(url.contains("search=john"))
 }
+
+@Test("URL construction preserves base path and normalizes endpoint path")
+func urlConstructionPreservesBasePathAndNormalizesPath() {
+    let endpoint = MockEndpoint(
+        base: "https://api.example.com/api",
+        path: "v1/resource"
+    )
+
+    let request = endpoint.urlRequest
+
+    #expect(request != nil)
+    #expect(request?.url?.absoluteString == "https://api.example.com/api/v1/resource")
+}
+
+@Test("URL construction with base only")
+func urlConstructionWithBaseOnly() {
+    let endpoint = MockEndpoint(base: "https://api.example.com")
+
+    let request = endpoint.urlRequest
+
+    #expect(request != nil)
+    #expect(request?.url?.absoluteString == "https://api.example.com")
+}
     
 // MARK: - HTTP Method Tests
 
@@ -412,6 +435,63 @@ func multipartWithFileNameWithoutMimeTypeHasSeparator() {
         let bodyString = String(data: httpBody, encoding: .utf8)
         #expect(bodyString != nil)
         #expect(bodyString?.contains("filename=\"raw.bin\"\r\n\r\nraw-data") ?? false)
+    }
+}
+
+@Test("Multipart with missing file returns nil request")
+func multipartWithMissingFileReturnsNilRequest() {
+    let missingFileURL = FileManager.default.temporaryDirectory
+        .appendingPathComponent(UUID().uuidString)
+        .appendingPathExtension("bin")
+    let part = MultipartFormData(
+        provider: .file(missingFileURL),
+        name: "missing-file",
+        fileName: "missing.bin",
+        mimeType: "application/octet-stream"
+    )
+
+    let endpoint = MockEndpoint(
+        urlString: "https://api.example.com/upload",
+        httpMethod: .post,
+        parts: [part]
+    )
+
+    let request = endpoint.urlRequest
+
+    #expect(request == nil)
+}
+
+@Test("CustomEndpoint toEndpoint keeps multipart parts")
+func customEndpointToEndpointKeepsMultipartParts() {
+    let partData = "part-content".data(using: .utf8)!
+    let part = MultipartFormData(
+        provider: .data(partData),
+        name: "file",
+        fileName: "file.txt",
+        mimeType: "text/plain"
+    )
+
+    let baseEndpoint = BaseEndpoint(
+        urlString: "https://api.example.com/upload",
+        httpMethod: .post,
+        parts: [part]
+    )
+    let customEndpoint = CustomEndpoint(
+        endpoint: baseEndpoint,
+        overrides: .headers(["Authorization": "Bearer token"])
+    )
+    let convertedEndpoint = customEndpoint.toEndpoint()
+
+    let request = convertedEndpoint.urlRequest
+
+    #expect(request != nil)
+    #expect(request?.value(forHTTPHeaderField: "Authorization") == "Bearer token")
+    #expect(request?.value(forHTTPHeaderField: "Content-Type")?.contains("multipart/form-data") ?? false)
+
+    if let httpBody = request?.httpBody {
+        let bodyString = String(data: httpBody, encoding: .utf8)
+        #expect(bodyString?.contains("Content-Disposition: form-data; name=\"file\"; filename=\"file.txt\"") ?? false)
+        #expect(bodyString?.contains("part-content") ?? false)
     }
 }
     
