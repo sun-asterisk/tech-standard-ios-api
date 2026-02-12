@@ -54,9 +54,21 @@ public class DataTaskHandler: NSObject, URLSessionDataDelegate {
     
     /// An optional logger for logging requests and responses.
     public weak var logger: APILogger?
-    
-    /// A dictionary to store received data for each URL.
-    private var receivedDataDict = [URL: Data]()
+
+    private struct TaskCallbacks {
+        var didReceive: ((_ totalBytesReceived: Int64, _ totalBytesExpectedToReceive: Int64, _ data: Data) -> Void)?
+        var didComplete: ((_ response: URLResponse?, _ error: Error?) -> Void)?
+
+        static let empty = TaskCallbacks()
+    }
+
+    private struct TaskState {
+        var callbacks: TaskCallbacks
+        var receivedData = Data()
+    }
+
+    private let lock = NSLock()
+    private var taskStates = [Int: TaskState]()
     
     /// Initializes a new instance of DataTaskHandler with an optional logger.
     ///
@@ -65,40 +77,67 @@ public class DataTaskHandler: NSObject, URLSessionDataDelegate {
         self.logger = logger
         super.init()
     }
-    
-    /// Gets the received data for the given URL.
-    ///
-    /// - Parameter url: The URL to get the received data for.
-    /// - Returns: The received data.
-    private func getReceivedData(for url: URL) -> Data {
-        receivedDataDict[url] ?? Data()
+
+    func registerCallbacks(
+        for taskIdentifier: Int,
+        didReceive: ((_ totalBytesReceived: Int64, _ totalBytesExpectedToReceive: Int64, _ data: Data) -> Void)? = nil,
+        didComplete: ((_ response: URLResponse?, _ error: Error?) -> Void)? = nil
+    ) {
+        lock.lock()
+        defer { lock.unlock() }
+
+        var state = taskStates[taskIdentifier] ?? TaskState(callbacks: .empty)
+        state.callbacks = TaskCallbacks(didReceive: didReceive, didComplete: didComplete)
+        taskStates[taskIdentifier] = state
+    }
+
+    func unregisterCallbacks(for taskIdentifier: Int) {
+        lock.lock()
+        defer { lock.unlock() }
+        taskStates[taskIdentifier] = nil
+    }
+
+    private func appendData(_ data: Data, for taskIdentifier: Int) -> TaskState {
+        lock.lock()
+        defer { lock.unlock() }
+
+        var state = taskStates[taskIdentifier] ?? TaskState(callbacks: .empty)
+        state.receivedData.append(data)
+        taskStates[taskIdentifier] = state
+        return state
+    }
+
+    private func takeState(for taskIdentifier: Int) -> TaskState? {
+        lock.lock()
+        defer { lock.unlock() }
+        return taskStates.removeValue(forKey: taskIdentifier)
     }
     
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
         guard let url = dataTask.originalRequest?.url else { return }
-        // Append received data
-        var receivedData = getReceivedData(for: url)
-        receivedData.append(data)
-        receivedDataDict[url] = receivedData
+        let state = appendData(data, for: dataTask.taskIdentifier)
+        let receivedData = state.receivedData
         
         let totalBytesReceived = dataTask.countOfBytesReceived
         let totalBytesExpectedToReceive = dataTask.countOfBytesExpectedToReceive
+        state.callbacks.didReceive?(totalBytesReceived, totalBytesExpectedToReceive, receivedData)
         didReceive?(url, totalBytesReceived, totalBytesExpectedToReceive, receivedData)
     }
     
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        guard let url = task.originalRequest?.url else { return }
+        let state = takeState(for: task.taskIdentifier)
+        let normalizedError = (error as? URLError) ?? error
         
         logger?.logResponse(forRequest: task.originalRequest, response: task.response, data: nil)
-        
-        if let error = error as? URLError {
-            didComplete?(url, error)
-        } else {
-            didComplete?(url, nil)
+
+        state?.callbacks.didComplete?(task.response, normalizedError)
+
+        if let url = task.originalRequest?.url {
+            if normalizedError == nil, let data = state?.receivedData {
+                didFinishReceiving?(url, data)
+            }
+            didComplete?(url, normalizedError)
         }
-        
-        // Clean up
-        receivedDataDict[url] = nil
     }
     
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, willCacheResponse proposedResponse: CachedURLResponse, completionHandler: @escaping (CachedURLResponse?) -> Void) {
@@ -156,10 +195,11 @@ public class DataTaskSubscription<SubscriberType: Subscriber>: NSObject, Subscri
     SubscriberType.Failure == URLError
 {
     private var subscriber: SubscriberType?
-    private weak var session: URLSession!
-    private var request: URLRequest!
-    private var task: URLSessionDataTask!
+    private weak var session: URLSession?
+    private let request: URLRequest
+    private var task: URLSessionDataTask?
     private unowned let delegate: DataTaskHandler
+    private var isCompleted = false
     
     /// Initializes a new DataTaskSubscription.
     ///
@@ -179,40 +219,78 @@ public class DataTaskSubscription<SubscriberType: Subscriber>: NSObject, Subscri
     ///
     /// - Parameter demand: The number of values to request.
     public func request(_ demand: Subscribers.Demand) {
-        guard demand > 0 else { return }
-        
-        guard let requestURL = request.url else {
-            subscriber?.receive(completion: .failure(URLError(.badURL)))
+        guard demand > 0, !isCompleted else { return }
+        guard request.url != nil else {
+            finish(.failure(URLError(.badURL)))
             return
         }
-        
-        delegate.didFinishReceiving = { [weak self] url, data in
-            guard url == requestURL else { return }
-            _ = self?.subscriber?.receive((data, 1.0))
+        guard let session else {
+            finish(.failure(URLError(.unknown)))
+            return
         }
-        
-        delegate.didComplete = { [weak self] url, error in
-            guard url == requestURL else { return }
-            
-            if let error = error as? URLError {
-                self?.subscriber?.receive(completion: .failure(error))
-            } else {
-                self?.subscriber?.receive(completion: .finished)
+
+        let task = session.dataTask(with: request)
+        self.task = task
+
+        delegate.registerCallbacks(
+            for: task.taskIdentifier,
+            didReceive: { [weak self] totalBytesReceived, totalBytesExpectedToReceive, data in
+                guard let self, !self.isCompleted else { return }
+                let progress: Double? = totalBytesExpectedToReceive > 0
+                    ? Double(totalBytesReceived) / Double(totalBytesExpectedToReceive)
+                    : nil
+                _ = self.subscriber?.receive((data, progress))
+            },
+            didComplete: { [weak self] response, error in
+                guard let self, !self.isCompleted else { return }
+
+                if let error {
+                    let urlError = (error as? URLError) ?? URLError(.unknown)
+                    self.finish(.failure(urlError))
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    self.finish(.failure(URLError(.badServerResponse)))
+                    return
+                }
+
+                guard 200..<300 ~= httpResponse.statusCode else {
+                    self.finish(.failure(URLError(.badServerResponse)))
+                    return
+                }
+
+                self.finish(.finished)
             }
+        )
+
+        task.resume()
+    }
+
+    private func finish(_ completion: Subscribers.Completion<URLError>) {
+        guard !isCompleted else { return }
+        isCompleted = true
+
+        if let task {
+            delegate.unregisterCallbacks(for: task.taskIdentifier)
         }
-        
-        delegate.didReceive = { [weak self] url, totalBytesReceived, totalBytesExpectedToReceive, data in
-            guard url == requestURL else { return }
-            let progress = Double(totalBytesReceived) / Double(totalBytesExpectedToReceive)
-            _ = self?.subscriber?.receive((data, progress))
-        }
-        
-        self.task = self.session.dataTask(with: request)
-        self.task.resume()
+
+        subscriber?.receive(completion: completion)
+        subscriber = nil
+        task = nil
     }
     
     /// Cancels the subscription, stopping the data task.
     public func cancel() {
-        self.task.cancel()
+        guard !isCompleted else { return }
+        isCompleted = true
+
+        if let task {
+            delegate.unregisterCallbacks(for: task.taskIdentifier)
+            task.cancel()
+        }
+
+        subscriber = nil
+        task = nil
     }
 }

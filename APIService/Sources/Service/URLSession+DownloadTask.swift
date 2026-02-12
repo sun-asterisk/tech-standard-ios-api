@@ -60,9 +60,10 @@ public extension URLSession {
         SubscriberType.Failure == URLError
     {
         private var subscriber: SubscriberType?
-        private weak var session: URLSession!
-        private var request: URLRequest!
-        private var task: URLSessionDownloadTask!
+        private weak var session: URLSession?
+        private let request: URLRequest
+        private var task: URLSessionDownloadTask?
+        private var isCompleted = false
 
         /// Initializes a new DownloadTaskSubscription.
         ///
@@ -80,40 +81,68 @@ public extension URLSession {
         ///
         /// - Parameter demand: The number of values to request.
         public func request(_ demand: Subscribers.Demand) {
-            guard demand > 0 else {
+            guard demand > 0, !isCompleted else {
                 return
             }
-            
-            self.task = self.session.downloadTask(with: request) { [weak self] url, response, error in
-                if let error = error as? URLError {
-                    self?.subscriber?.receive(completion: .failure(error))
+
+            guard let session else {
+                finish(.failure(URLError(.unknown)))
+                return
+            }
+
+            self.task = session.downloadTask(with: request) { [weak self] url, response, error in
+                guard let self, !self.isCompleted else { return }
+
+                if let error {
+                    let urlError = (error as? URLError) ?? URLError(.unknown)
+                    self.finish(.failure(urlError))
                     return
                 }
-                guard let response = response else {
-                    self?.subscriber?.receive(completion: .failure(URLError(.badServerResponse)))
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    self.finish(.failure(URLError(.badServerResponse)))
                     return
                 }
+
+                guard 200..<300 ~= httpResponse.statusCode else {
+                    self.finish(.failure(URLError(.badServerResponse)))
+                    return
+                }
+
                 guard let url = url else {
-                    self?.subscriber?.receive(completion: .failure(URLError(.badURL)))
+                    self.finish(.failure(URLError(.badURL)))
                     return
                 }
+
                 do {
                     let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
                     let fileUrl = cacheDir.appendingPathComponent((UUID().uuidString))
                     try FileManager.default.moveItem(atPath: url.path, toPath: fileUrl.path)
-                    _ = self?.subscriber?.receive((url: fileUrl, response: response))
-                    self?.subscriber?.receive(completion: .finished)
+                    _ = self.subscriber?.receive((url: fileUrl, response: httpResponse))
+                    self.finish(.finished)
                 } catch {
-                    self?.subscriber?.receive(completion: .failure(URLError(.cannotCreateFile)))
+                    self.finish(.failure(URLError(.cannotCreateFile)))
                 }
             }
             
-            self.task.resume()
+            task?.resume()
+        }
+
+        private func finish(_ completion: Subscribers.Completion<URLError>) {
+            guard !isCompleted else { return }
+            isCompleted = true
+            subscriber?.receive(completion: completion)
+            subscriber = nil
+            task = nil
         }
 
         /// Cancels the subscription, stopping the download task.
         public func cancel() {
-            self.task.cancel()
+            guard !isCompleted else { return }
+            isCompleted = true
+            task?.cancel()
+            subscriber = nil
+            task = nil
         }
     }
 }

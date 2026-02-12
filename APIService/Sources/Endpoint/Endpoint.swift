@@ -196,13 +196,14 @@ public extension Endpoint {
                 if let fileName = part.fileName {
                     bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"; filename=\"\(fileName)\"\(lineBreak)".utf8Data)
                 } else {
-                    bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"\(lineBreak)\(lineBreak)".utf8Data)
+                    bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"\(lineBreak)".utf8Data)
                 }
                 
                 if let mimeType = part.mimeType {
-                    bodyData.append("Content-Type: \(mimeType)\(lineBreak)\(lineBreak)".utf8Data)
+                    bodyData.append("Content-Type: \(mimeType)\(lineBreak)".utf8Data)
                 }
-                
+
+                bodyData.append(lineBreak.utf8Data)
                 bodyData.append(data)
                 
             case .file(let url):
@@ -210,12 +211,13 @@ public extension Endpoint {
                     if let fileName = part.fileName {
                         bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"; filename=\"\(fileName)\"\(lineBreak)".utf8Data)
                     } else {
-                        bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"\(lineBreak)\(lineBreak)".utf8Data)
+                        bodyData.append("Content-Disposition: form-data; name=\"\(part.name)\"\(lineBreak)".utf8Data)
                     }
                     
                     let mimeType = part.mimeType ?? mimeType(for: url)
-                    bodyData.append("Content-Type: \(mimeType)\(lineBreak)\(lineBreak)".utf8Data)
+                    bodyData.append("Content-Type: \(mimeType)\(lineBreak)".utf8Data)
                     
+                    bodyData.append(lineBreak.utf8Data)
                     bodyData.append(fileData)
                 }
             }

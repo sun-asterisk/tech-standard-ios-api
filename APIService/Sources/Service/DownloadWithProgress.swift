@@ -57,6 +57,17 @@ public class DownloadTaskHandler: NSObject, URLSessionDownloadDelegate {
     
     /// An optional logger for logging requests and responses.
     public weak var logger: APILogger?
+
+    private struct TaskCallbacks {
+        var didWriteData: ((_ bytesWritten: Int64, _ totalBytesWritten: Int64, _ totalBytesExpectedToWrite: Int64) -> Void)?
+        var didFinishDownloading: ((_ location: URL, _ response: URLResponse?) -> Void)?
+        var didComplete: ((_ response: URLResponse?, _ error: Error?) -> Void)?
+
+        static let empty = TaskCallbacks()
+    }
+
+    private let lock = NSLock()
+    private var taskCallbacks = [Int: TaskCallbacks]()
     
     /// Initializes a new instance of DownloadTaskHandler with an optional logger.
     ///
@@ -65,15 +76,50 @@ public class DownloadTaskHandler: NSObject, URLSessionDownloadDelegate {
         self.logger = logger
         super.init()
     }
+
+    func registerCallbacks(
+        for taskIdentifier: Int,
+        didWriteData: ((_ bytesWritten: Int64, _ totalBytesWritten: Int64, _ totalBytesExpectedToWrite: Int64) -> Void)? = nil,
+        didFinishDownloading: ((_ location: URL, _ response: URLResponse?) -> Void)? = nil,
+        didComplete: ((_ response: URLResponse?, _ error: Error?) -> Void)? = nil
+    ) {
+        lock.lock()
+        defer { lock.unlock() }
+        taskCallbacks[taskIdentifier] = TaskCallbacks(
+            didWriteData: didWriteData,
+            didFinishDownloading: didFinishDownloading,
+            didComplete: didComplete
+        )
+    }
+
+    func unregisterCallbacks(for taskIdentifier: Int) {
+        lock.lock()
+        defer { lock.unlock() }
+        taskCallbacks[taskIdentifier] = nil
+    }
+
+    private func callbacks(for taskIdentifier: Int) -> TaskCallbacks {
+        lock.lock()
+        defer { lock.unlock() }
+        return taskCallbacks[taskIdentifier] ?? .empty
+    }
+
+    private func takeCallbacks(for taskIdentifier: Int) -> TaskCallbacks {
+        lock.lock()
+        defer { lock.unlock() }
+        return taskCallbacks.removeValue(forKey: taskIdentifier) ?? .empty
+    }
     
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         guard let url = downloadTask.originalRequest?.url else { return }
         logger?.logResponse(forRequest: downloadTask.originalRequest, response: downloadTask.response, data: nil)
+        callbacks(for: downloadTask.taskIdentifier).didFinishDownloading?(location, downloadTask.response)
         didFinishDownloading?(url, location)
     }
     
     public func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         guard let url = downloadTask.originalRequest?.url else { return }
+        callbacks(for: downloadTask.taskIdentifier).didWriteData?(bytesWritten, totalBytesWritten, totalBytesExpectedToWrite)
         didWriteData?(url, bytesWritten, totalBytesWritten, totalBytesExpectedToWrite)
     }
 
@@ -84,7 +130,10 @@ public class DownloadTaskHandler: NSObject, URLSessionDownloadDelegate {
     
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard let url = task.originalRequest?.url else { return }
-        didComplete?(url, error)
+        let callbacks = takeCallbacks(for: task.taskIdentifier)
+        let normalizedError = (error as? URLError) ?? error
+        callbacks.didComplete?(task.response, normalizedError)
+        didComplete?(url, normalizedError)
     }
 }
 
@@ -134,10 +183,11 @@ public class DownloadTaskSubscription<SubscriberType: Subscriber>: NSObject, Sub
     SubscriberType.Failure == URLError
 {
     private var subscriber: SubscriberType?
-    private weak var session: URLSession!
-    private var request: URLRequest!
-    private var task: URLSessionDownloadTask!
+    private weak var session: URLSession?
+    private let request: URLRequest
+    private var task: URLSessionDownloadTask?
     private unowned let delegate: DownloadTaskHandler
+    private var isCompleted = false
     
     /// Initializes a new DownloadTaskSubscription.
     ///
@@ -157,46 +207,94 @@ public class DownloadTaskSubscription<SubscriberType: Subscriber>: NSObject, Sub
     ///
     /// - Parameter demand: The number of values to request.
     public func request(_ demand: Subscribers.Demand) {
-        guard demand > 0 else { return }
-        
-        guard let requestURL = request.url else {
-            subscriber?.receive(completion: .failure(URLError(.badURL)))
+        guard demand > 0, !isCompleted else { return }
+        guard request.url != nil else {
+            finish(.failure(URLError(.badURL)))
             return
         }
-        
-        delegate.didFinishDownloading = { [weak self] url, location in
-            guard url == requestURL else { return }
-            do {
-                let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
-                let fileUrl = cacheDir.appendingPathComponent((UUID().uuidString))
-                try FileManager.default.moveItem(atPath: location.path, toPath: fileUrl.path)
-                _ = self?.subscriber?.receive((url: fileUrl, progress: 1.0))
-                self?.subscriber?.receive(completion: .finished)
-            } catch {
-                self?.subscriber?.receive(completion: .failure(URLError(.cannotCreateFile)))
+        guard let session else {
+            finish(.failure(URLError(.unknown)))
+            return
+        }
+
+        let task = session.downloadTask(with: request)
+        self.task = task
+
+        delegate.registerCallbacks(
+            for: task.taskIdentifier,
+            didWriteData: { [weak self] _, totalBytesWritten, totalBytesExpectedToWrite in
+                guard let self, !self.isCompleted else { return }
+                let progress: Double? = totalBytesExpectedToWrite > 0
+                    ? Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)
+                    : nil
+                _ = self.subscriber?.receive((nil, progress))
+            },
+            didFinishDownloading: { [weak self] location, response in
+                guard let self, !self.isCompleted else { return }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    self.finish(.failure(URLError(.badServerResponse)))
+                    return
+                }
+
+                guard 200..<300 ~= httpResponse.statusCode else {
+                    self.finish(.failure(URLError(.badServerResponse)))
+                    return
+                }
+
+                do {
+                    let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+                    let fileUrl = cacheDir.appendingPathComponent(UUID().uuidString)
+                    try FileManager.default.moveItem(atPath: location.path, toPath: fileUrl.path)
+                    _ = self.subscriber?.receive((url: fileUrl, progress: 1.0))
+                    self.finish(.finished)
+                } catch {
+                    self.finish(.failure(URLError(.cannotCreateFile)))
+                }
+            },
+            didComplete: { [weak self] response, error in
+                guard let self, !self.isCompleted else { return }
+
+                if let error {
+                    let urlError = (error as? URLError) ?? URLError(.unknown)
+                    self.finish(.failure(urlError))
+                    return
+                }
+
+                if let httpResponse = response as? HTTPURLResponse,
+                   !(200..<300 ~= httpResponse.statusCode) {
+                    self.finish(.failure(URLError(.badServerResponse)))
+                }
             }
+        )
+
+        task.resume()
+    }
+
+    private func finish(_ completion: Subscribers.Completion<URLError>) {
+        guard !isCompleted else { return }
+        isCompleted = true
+
+        if let task {
+            delegate.unregisterCallbacks(for: task.taskIdentifier)
         }
-        
-        delegate.didComplete = { [weak self] url, error in
-            guard url == requestURL else { return }
-            
-            if let error = error as? URLError {
-                self?.subscriber?.receive(completion: .failure(error))
-            }
-        }
-        
-        delegate.didWriteData = { [weak self] url, bytesWritten, totalBytesWritten, totalBytesExpectedToWrite in
-            guard url == requestURL else { return }
-            let progress = Double(totalBytesWritten) / Double(totalBytesExpectedToWrite)
-            _ = self?.subscriber?.receive((nil, progress))
-        }
-        
-        self.task = self.session.downloadTask(with: request)
-        self.task.resume()
+
+        subscriber?.receive(completion: completion)
+        subscriber = nil
+        task = nil
     }
     
     /// Cancels the subscription, stopping the download task.
     public func cancel() {
-        self.task.cancel()
+        guard !isCompleted else { return }
+        isCompleted = true
+
+        if let task {
+            delegate.unregisterCallbacks(for: task.taskIdentifier)
+            task.cancel()
+        }
+
+        subscriber = nil
+        task = nil
     }
 }

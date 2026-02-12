@@ -50,5 +50,9 @@ public final class DefaultAPIService: APIService, DownloadWithProgress, DataWith
         // Session for data
         let dataConfiguration = downloadConfiguration.copy() as! URLSessionConfiguration
         self.dataSession = URLSession(configuration: dataConfiguration, delegate: dataTaskHandler, delegateQueue: nil)
+
+        // Keep handlers aligned with the service logger from initialization.
+        self.dataTaskHandler.logger = logger
+        self.downloadTaskHandler.logger = logger
     }
 }
